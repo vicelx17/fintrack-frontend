@@ -46,7 +46,9 @@ export function QuickActions() {
               <Button
                 key={index}
                 variant="outline"
-                className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-accent/50 bg-transparent"
+                className={`h-auto p-4 flex flex-col items-center space-y-2 hover:bg-accent/50 bg-transparent ${
+                  index === 0 ? "col-span-2 w-full" : ""
+                }`}
                 onClick={action.action}
               >
                 <div className={`p-2 rounded-lg ${action.color}`}>
