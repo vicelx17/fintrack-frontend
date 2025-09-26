@@ -29,8 +29,7 @@ export interface AuthResponse {
   message?: string
 }
 
-// API Base URL - will be configured based on environment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = "http://localhost:8000"
 
 export class AuthService {
   private static token: string | null = null

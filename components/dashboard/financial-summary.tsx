@@ -1,37 +1,70 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, PiggyBank } from "lucide-react"
+import { useDashboard } from "@/hooks/use-dashboard"
+import { CreditCard, EuroIcon, PiggyBank, TrendingDown, TrendingUp } from "lucide-react"
 
 export function FinancialSummary() {
+  const {financialSummary, loading} = useDashboard()
+
+  if (loading.financial.isLoading || !financialSummary) {
+    return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="relative overflow-hidden animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-28"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+  if (loading.financial.error) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="col-span-full">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-500">Error cargando datos financieros: {loading.financial.error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const summaryData = [
     {
       title: "Balance Total",
-      value: "€12,450.80",
-      change: "+2.5%",
-      trend: "up",
-      icon: DollarSign,
+      value: `€${financialSummary.total_balance.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes.balance,
+      trend: financialSummary.changes.balance.startsWith('+') ? "up" : "down",
+      icon: EuroIcon,
       description: "vs mes anterior",
     },
     {
       title: "Ingresos del Mes",
-      value: "€4,200.00",
-      change: "+8.2%",
-      trend: "up",
+      value: `€${financialSummary.monthly_income.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes.income,
+      trend: financialSummary.changes.income.startsWith('+') ? "up" : "down",
       icon: TrendingUp,
       description: "vs mes anterior",
     },
     {
       title: "Gastos del Mes",
-      value: "€2,850.30",
-      change: "-3.1%",
-      trend: "down",
+      value: `€${financialSummary.monthly_expenses.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes.expenses,
+      trend: financialSummary.changes.expenses.startsWith('-') ? "up" : "down", // Menos gastos es bueno
       icon: CreditCard,
       description: "vs mes anterior",
     },
     {
       title: "Ahorros",
-      value: "€8,750.50",
-      change: "+12.4%",
-      trend: "up",
+      value: `€${financialSummary.savings.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes.savings,
+      trend: financialSummary.changes.savings.startsWith('+') ? "up" : "down",
       icon: PiggyBank,
       description: "objetivo: €10,000",
     },

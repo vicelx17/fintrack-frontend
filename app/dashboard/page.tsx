@@ -1,3 +1,4 @@
+"use client"
 import { AIInsights } from "@/components/dashboard/ai-insights"
 import { BudgetOverview } from "@/components/dashboard/budget-overview"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
