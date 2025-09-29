@@ -123,7 +123,7 @@ export const dashboardApi = {
 
     // Obtener insights de IA
     async getAIInsights(): Promise<{ insights: any[] }> {
-    const response = await fetch(`${API_BASE_URL}/metrics/ai-insights`, {
+    const response = await fetch(`${API_BASE_URL}/ai/ai-insights`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
