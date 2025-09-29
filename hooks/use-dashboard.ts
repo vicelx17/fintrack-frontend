@@ -58,8 +58,8 @@ export function useDashboard(){
             });
         } catch (error: any) {
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-            setLoading('complete', false, errorMessage);
             console.error("Error loading complete dashboard:", error);
+            setLoading('complete', false, errorMessage);
         }
     };
 

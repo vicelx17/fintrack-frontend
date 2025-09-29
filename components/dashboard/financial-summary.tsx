@@ -38,35 +38,34 @@ export function FinancialSummary() {
   const summaryData = [
     {
       title: "Balance Total",
-      value: `€${financialSummary.total_balance.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
-      change: financialSummary.changes.balance,
-      trend: financialSummary.changes.balance.startsWith('+') ? "up" : "down",
+      value: `€${(financialSummary.total_balance || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes?.balance || "0.0%",
+      trend: (financialSummary.changes?.balance || "").startsWith('+') ? "up" : "down",
       icon: EuroIcon,
       description: "vs mes anterior",
     },
     {
       title: "Ingresos del Mes",
-      value: `€${financialSummary.monthly_income.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
-      change: financialSummary.changes.income,
-      trend: financialSummary.changes.income.startsWith('+') ? "up" : "down",
+      value: `€${(financialSummary.monthly_income || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes?.income || "0.0%",
+      trend: (financialSummary.changes?.income || "").startsWith('+') ? "up" : "down",
       icon: TrendingUp,
       description: "vs mes anterior",
     },
     {
       title: "Gastos del Mes",
-      value: `€${financialSummary.monthly_expenses.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
-      change: financialSummary.changes.expenses,
-      trend: financialSummary.changes.expenses.startsWith('-') ? "up" : "down", // Menos gastos es bueno
+      value: `€${(financialSummary.monthly_expenses || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes?.expenses || "0.0%",
+      trend: (financialSummary.changes?.expenses || "").startsWith('-') ? "up" : "down",
       icon: CreditCard,
       description: "vs mes anterior",
     },
     {
       title: "Ahorros",
-      value: `€${financialSummary.savings.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
-      change: financialSummary.changes.savings,
-      trend: financialSummary.changes.savings.startsWith('+') ? "up" : "down",
+      value: `€${(financialSummary.saving || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      change: financialSummary.changes?.savings || "0.0%",
+      trend: (financialSummary.changes?.savings || "").startsWith('+') ? "up" : "down",
       icon: PiggyBank,
-      description: "objetivo: €10,000",
     },
   ]
 
@@ -77,7 +76,7 @@ export function FinancialSummary() {
         const isPositive = item.trend === "up"
 
         return (
-          <Card key={index} className="relative overflow-hidden">
+          <Card key={index} className="relative overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{item.title}</CardTitle>
               <div className={`p-2 rounded-lg ${isPositive ? "bg-primary/10" : "bg-secondary/10"}`}>

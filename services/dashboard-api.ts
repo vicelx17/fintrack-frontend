@@ -3,7 +3,7 @@ export interface FinancialSummary {
     total_balance: number;
     monthly_income: number;
     monthly_expenses: number;
-    savings: number;
+    saving: number;
     changes: {
         balance: number;
         income: number;
@@ -36,7 +36,7 @@ export interface RecentTransaction {
 export interface BudgetOverview {
     category: string;
     spent: number;
-    budgeted: number;
+    budget: number;
     percentage: number;
     ramaining: number;
     status: 'good' | 'warning' | 'over';
