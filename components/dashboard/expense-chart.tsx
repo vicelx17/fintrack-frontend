@@ -14,7 +14,7 @@ export function ExpenseChart() {
     <Card>
       <CardHeader>
         <CardTitle>Análisis Financiero</CardTitle>
-        <CardDescription>Resumen de ingresos, gastos y balance mensual</CardDescription>
+        <CardDescription>Resumen de ingresos, gastos mensuales y por categorías</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="monthly" className="space-y-4">
@@ -45,7 +45,7 @@ export function ExpenseChart() {
                   },
                   expenses: {
                     label: "Gastos",
-                    color: "#e68585ff",
+                    color: "#f17070ff",
                   },
                   balance: {
                     label: "Balance",

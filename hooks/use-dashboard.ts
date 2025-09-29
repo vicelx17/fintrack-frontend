@@ -40,13 +40,18 @@ export function useDashboard(){
     const loadCompleteDashboard = async () => {
         setLoading('complete', true);
         try {
+            console.log('🚀 Cargando dashboard completo...');
             const data = await dashboardApi.getCompleteDashboard();
+            console.log('✅ Datos recibidos del backend:', data);
 
             setFinancialSummary(data.financial_summary);
             setMonthlyData(data.monthly_chart);
             setCategoryData(data.category_chart);
             setRecentTransactions(data.recent_transactions);
             setBudgetOverview(data.budget_overview);
+
+            console.log('✅ Estados actualizados');
+            console.log('Financial Summary:', data.financial_summary);
 
             setLoadingStates({
                 financial: { isLoading: false, error: null },

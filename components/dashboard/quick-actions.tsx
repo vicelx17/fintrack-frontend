@@ -21,7 +21,7 @@ export function QuickActions() {
       description: "Crear meta de gastos",
       icon: Target,
       color: "bg-accent text-accent-foreground",
-      action: () => console.log("Nuevo presupuesto"),
+      action: () => openDialog(),
     },
     {
       title: "Generar Reporte",

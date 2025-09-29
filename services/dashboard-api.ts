@@ -38,7 +38,7 @@ export interface BudgetOverview {
     spent: number;
     budget: number;
     percentage: number;
-    ramaining: number;
+    remaining: number;
     status: 'good' | 'warning' | 'over';
 }
 
@@ -52,6 +52,7 @@ const API_BASE_URL = 'http://localhost:8000'
 
 function getAuthHeaders() {
     const token = localStorage.getItem('fintrack_token');
+    console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
     return {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -60,7 +61,10 @@ function getAuthHeaders() {
 
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
+        console.log('Response status:', response.status);
+        console.log('Response URL:', response.url);
         const errorData = await response.json().catch(() => ({detail: 'Network error'}));
+        console.error('API Error:', errorData);
         throw new Error(errorData.detail || 'HTPP ${response.status}');    
     }
     const data = await response.json();
@@ -70,7 +74,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export const dashboardApi = {
     // Obetener resumen financiero
     async getFinancialSummary(): Promise<FinancialSummary> {
-        const response = await fetch(`${API_BASE_URL}/dashboard/financial-summary`, {
+        const response = await fetch(`${API_BASE_URL}/metrics/financial-summary`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -80,7 +84,7 @@ export const dashboardApi = {
 
     // Obtener datos mensuales para gráficos
     async getMonthlyData(months: number = 6): Promise<MonthlyData[]> {
-        const response = await fetch(`${API_BASE_URL}/dashboard/monthly-data?months=${months}`, {
+        const response = await fetch(`${API_BASE_URL}/metrics/monthly-data?months=${months}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -89,7 +93,7 @@ export const dashboardApi = {
     },
 
     async getCategoryData(): Promise<CategoryData[]> {
-        const response = await fetch(`${API_BASE_URL}/dashboard/category-data`, {
+        const response = await fetch(`${API_BASE_URL}/metrics/category-data`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -99,7 +103,7 @@ export const dashboardApi = {
 
     // Obtener transacciones recientes
     async getRecentTransactions(limit: number = 10): Promise<RecentTransaction[]> {
-        const response = await fetch(`${API_BASE_URL}/dashboard/recent-transactions?limit=${limit}`, {
+        const response = await fetch(`${API_BASE_URL}/metrics/recent-transactions?limit=${limit}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -109,13 +113,24 @@ export const dashboardApi = {
 
     // Obtener resumen de presupuestos
     async getBudgetOverview(): Promise<BudgetOverview[]> {
-        const response = await fetch(`${API_BASE_URL}/dashboard/budget-overview`, {
+        const response = await fetch(`${API_BASE_URL}/metrics/budget-overview`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
         const result = await handleResponse<ApiResponse<BudgetOverview[]>>(response);
         return result.data;
     },
+
+    // Obtener insights de IA
+    async getAIInsights(): Promise<{ insights: any[] }> {
+    const response = await fetch(`${API_BASE_URL}/metrics/ai-insights`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    const result = await handleResponse<ApiResponse<{ insights: any[] }>>(response);
+    return result.data;
+  },
 
     // TODO EL ENDPOINT EN UNA LLAMADA
     async getCompleteDashboard(): Promise<{

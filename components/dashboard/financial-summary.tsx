@@ -4,7 +4,8 @@ import { CreditCard, EuroIcon, PiggyBank, TrendingDown, TrendingUp } from "lucid
 
 export function FinancialSummary() {
   const {financialSummary, loading} = useDashboard()
-
+  console.log('FinancialSummary - financialSummary:', financialSummary)
+  console.log('FinancialSummary - loading:', loading)
   if (loading.financial.isLoading || !financialSummary) {
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
