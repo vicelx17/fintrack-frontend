@@ -25,12 +25,12 @@ export interface CategoryData {
 }
 
 export interface RecentTransaction {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-  category: string;
-  type: 'income' | 'expense';
+    id: number;
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    type: 'income' | 'expense';
 }
 
 export interface BudgetOverview {
@@ -63,9 +63,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
         console.log('Response status:', response.status);
         console.log('Response URL:', response.url);
-        const errorData = await response.json().catch(() => ({detail: 'Network error'}));
+        const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
         console.error('API Error:', errorData);
-        throw new Error(errorData.detail || 'HTPP ${response.status}');    
+        throw new Error(errorData.detail || 'HTPP ${response.status}');
     }
     const data = await response.json();
     return data;
@@ -123,39 +123,56 @@ export const dashboardApi = {
 
     // Obtener insights de IA
     async getAIInsights(): Promise<{ insights: any[] }> {
-    const response = await fetch(`${API_BASE_URL}/ai/ai-insights`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    
-    const result = await handleResponse<ApiResponse<{ insights: any[] }>>(response);
-    return result.data;
-  },
+        const response = await fetch(`${API_BASE_URL}/ai/ai-insights`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        const result = await handleResponse<ApiResponse<{ insights: any[] }>>(response);
+        return result.data;
+    },
+
+    async getAIPredictions(): Promise<any> {
+        const response = await fetch(`${API_BASE_URL}/ai/predict`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse<ApiResponse<any>>(response);
+    },
+
+    async getSpendingTrends(): Promise<any> {
+        const response = await fetch(`${API_BASE_URL}/ai/spending-trends`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+        const result = await handleResponse<ApiResponse<any>>(response);
+        return result.data;
+    },
 
     // TODO EL ENDPOINT EN UNA LLAMADA
-    async getCompleteDashboard(): Promise<{
-    financial_summary: FinancialSummary;
-    monthly_chart: MonthlyData[];
-    category_chart: CategoryData[];
-    recent_transactions: RecentTransaction[];
-    budget_overview: BudgetOverview[];
-  }> {
-    const response = await fetch(`${API_BASE_URL}/metrics/complete`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    
-    const result = await handleResponse<ApiResponse<any>>(response);
-    return result.data;
-  },
+    async getCompleteDashboard(): Promise < {
+            financial_summary: FinancialSummary;
+            monthly_chart: MonthlyData[];
+            category_chart: CategoryData[];
+            recent_transactions: RecentTransaction[];
+            budget_overview: BudgetOverview[];
+        } > {
+            const response = await fetch(`${API_BASE_URL}/metrics/complete`, {
+                method: 'GET',
+                headers: getAuthHeaders(),
+            });
 
-  async healthCheck(): Promise<{ status: string }> {
-    const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  }
-};
+            const result = await handleResponse<ApiResponse<any>>(response);
+            return result.data;
+        },
 
-export default dashboardApi;
+            async healthCheck(): Promise < { status: string } > {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: getAuthHeaders(),
+                });
+                return await handleResponse(response);
+            }
+    };
+
+    export default dashboardApi;
