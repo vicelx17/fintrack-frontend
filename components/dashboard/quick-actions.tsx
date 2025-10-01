@@ -2,11 +2,13 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useBudget } from "@/contexts/budget-context"
 import { useTransaction } from "@/contexts/transaction-context"
 import { FileText, Plus, Target } from "lucide-react"
 
 export function QuickActions() {
-  const { openDialog } = useTransaction()
+  const { openTransactionDialog } = useTransaction()
+  const { openBudgetDialog } = useBudget()
 
   const actions = [
     {
@@ -14,14 +16,14 @@ export function QuickActions() {
       description: "Registrar ingreso o gasto",
       icon: Plus,
       color: "bg-primary text-primary-foreground",
-      action: () => openDialog(), // Usa el contexto
+      action: () => openTransactionDialog(),
     },
     {
       title: "Nuevo Presupuesto",
       description: "Crear meta de gastos",
       icon: Target,
       color: "bg-accent text-accent-foreground",
-      action: () => openDialog(),
+      action: () => openBudgetDialog(),
     },
     {
       title: "Generar Reporte",

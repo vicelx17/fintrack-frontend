@@ -4,14 +4,14 @@ import { useTransaction } from "@/contexts/transaction-context"
 import { TransactionDialog } from "./transaction-dialog"
 
 export function TransactionDialogContainer() {
-  const { isDialogOpen, closeDialog, currentTransaction } = useTransaction()
+  const { isDialogOpen, closeTransactionDialog, currentTransaction } = useTransaction()
 
   return (
     <TransactionDialog
       open={isDialogOpen}
-      onOpenChange={closeDialog}
+      onOpenChange={closeTransactionDialog}
       transaction={currentTransaction}
-      onClose={closeDialog}
+      onClose={closeTransactionDialog}
     />
   )
 }

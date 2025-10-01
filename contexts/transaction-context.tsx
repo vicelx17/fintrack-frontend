@@ -4,8 +4,8 @@ import { createContext, ReactNode, useContext, useState } from 'react'
 
 interface TransactionContextType {
   isDialogOpen: boolean
-  openDialog: (transaction?: any) => void
-  closeDialog: () => void
+  openTransactionDialog: (transaction?: any) => void
+  closeTransactionDialog: () => void
   currentTransaction: any | null
 }
 
@@ -19,12 +19,12 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentTransaction, setCurrentTransaction] = useState<any | null>(null)
 
-  const openDialog = (transaction?: any) => {
+  const openTransactionDialog = (transaction?: any) => {
     setCurrentTransaction(transaction || null)
     setIsDialogOpen(true)
   }
 
-  const closeDialog = () => {
+  const closeTransactionDialog = () => {
     setIsDialogOpen(false)
     setCurrentTransaction(null)
   }
@@ -32,8 +32,8 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
   return (
     <TransactionContext.Provider value={{
       isDialogOpen,
-      openDialog,
-      closeDialog,
+      openTransactionDialog,
+      closeTransactionDialog,
       currentTransaction
     }}>
       {children}
