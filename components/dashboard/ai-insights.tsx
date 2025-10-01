@@ -3,20 +3,8 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import dashboardApi from "@/services/dashboard-api"
+import { useAIInsights } from "@/hooks/use-ai"
 import { AlertTriangle, Brain, ChevronRight, Lightbulb, RefreshCw } from "lucide-react"
-import { useEffect, useState } from "react"
-
-interface AIInsights {
-  type: "prediction" | "warning" | "tip"
-  title: string
-  message: string
-  confidence: "Alta" | "Media" | "Crítico"
-  icon: string
-  color: string
-  amount?: number
-  category?: string
-}
 
 const iconMap: { [key: string]: any } = {
   brain: Brain,
@@ -37,60 +25,15 @@ const badgeVariantMap: { [key: string]: "default" | "destructive" | "outline" | 
 }
 
 export function AIInsights() {
-  const [insights, setInsights] = useState<AIInsights[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-
-  const loadInsights = async (isRefresh: boolean = false) => {
-    if (isRefresh) {
-      setIsRefreshing(true)
-    } else {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    try {
-      console.log("Cargando insights de IA...")
-      const response = await dashboardApi.getAIInsights()
-      console.log("Insights recibidos:", response)
-
-      if (response && Array.isArray(response.insights)) {
-        setInsights(response.insights)
-      } else {
-        setInsights([])
-      }
-    } catch (err) {
-      console.error("Error cargando insights de IA:", err)
-      setError(err instanceof Error ? err.message : "Error desconocido")
-
-      setInsights([
-        {
-          type: "tip",
-          title: "Servicio temporalmente no disponible",
-          message: "No se pudieron cargar los insights de IA. Por favor, inténtalo de nuevo más tarde.",
-          confidence: "Crítico",
-          icon: "alert-triangle",
-          color: "destructive",
-        },
-      ])
-    } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
-    }
-  }
-
-  useEffect(() => {
-    loadInsights()
-  }, [])
+  const { insights, isLoading, error, refresh } = useAIInsights()
 
   const handleRefresh = () => {
-    loadInsights(true)
+    refresh()
   }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center space-x-2">
           <Brain className="w-5 h-5 text-primary" />
           <span>Insights IA</span>
@@ -99,14 +42,15 @@ export function AIInsights() {
           variant="ghost"
           size="icon"
           onClick={handleRefresh}
-          disabled={isLoading || isRefreshing}
+          disabled={isLoading}
           className="h-8 w-8"
         >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </CardHeader>
+      
       <CardContent>
-        {isLoading && !isRefreshing && (
+        {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="p-3 rounded-lg border animate-pulse">
