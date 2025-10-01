@@ -1,118 +1,45 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useTransactions } from "@/hooks/use-transactions"
 import {
-  MoreHorizontal,
-  Edit,
-  Trash2,
+  ArrowUpRight, Car, Coffee,
   Copy,
-  ShoppingCart,
-  Car,
-  Home,
-  Coffee,
-  ArrowUpRight,
-  Smartphone,
-  Heart,
-  GraduationCap,
+  Edit,
+  Home, MoreHorizontal, ShoppingCart,
+  Trash2
 } from "lucide-react"
+import { useState } from "react"
 import { TransactionDialog } from "./transaction-dialog"
 
-const mockTransactions = [
-  {
-    id: "1",
-    date: "2025-01-15",
-    description: "Supermercado Central",
-    category: "Alimentación",
-    amount: -85.5,
-    type: "expense",
-    account: "Cuenta Corriente",
-    icon: ShoppingCart,
-  },
-  {
-    id: "2",
-    date: "2025-01-01",
-    description: "Salario Enero",
-    category: "Ingresos",
-    amount: 4200.0,
-    type: "income",
-    account: "Cuenta Corriente",
-    icon: ArrowUpRight,
-  },
-  {
-    id: "3",
-    date: "2025-01-14",
-    description: "Gasolina Shell",
-    category: "Transporte",
-    amount: -65.2,
-    type: "expense",
-    account: "Tarjeta de Crédito",
-    icon: Car,
-  },
-  {
-    id: "4",
-    date: "2025-01-01",
-    description: "Alquiler Apartamento",
-    category: "Vivienda",
-    amount: -1200.0,
-    type: "expense",
-    account: "Cuenta Corriente",
-    icon: Home,
-  },
-  {
-    id: "5",
-    date: "2025-01-13",
-    description: "Café Central",
-    category: "Entretenimiento",
-    amount: -12.5,
-    type: "expense",
-    account: "Tarjeta de Débito",
-    icon: Coffee,
-  },
-  {
-    id: "6",
-    date: "2025-01-12",
-    description: "Factura Móvil",
-    category: "Servicios",
-    amount: -45.0,
-    type: "expense",
-    account: "Cuenta Corriente",
-    icon: Smartphone,
-  },
-  {
-    id: "7",
-    date: "2025-01-10",
-    description: "Consulta Médica",
-    category: "Salud",
-    amount: -80.0,
-    type: "expense",
-    account: "Cuenta Corriente",
-    icon: Heart,
-  },
-  {
-    id: "8",
-    date: "2025-01-08",
-    description: "Curso Online",
-    category: "Educación",
-    amount: -150.0,
-    type: "expense",
-    account: "Tarjeta de Crédito",
-    icon: GraduationCap,
-  },
-]
 
+const categoryIcons: { [key: string]: any } = {
+  "Alimentación": ShoppingCart,
+  "Transporte": Car,
+  "Vivienda": Home,
+  "Entretenimiento": Coffee,
+  "Ingresos": ArrowUpRight,
+  // Agregar más si tenemos más categorías
+}
+const getCategoryIcon = (category: string) => {
+    // Mapeo de categorías a iconos
+    return categoryIcons[category] || ShoppingCart // Icono por defecto
+}
 export function TransactionList() {
   const [editingTransaction, setEditingTransaction] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const { transactionList, loading } = useTransactions()
 
   const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction)
     setIsDialogOpen(true)
   }
+
+  
 
   const handleDelete = (transactionId: string) => {
     // Handle delete logic
@@ -143,14 +70,14 @@ export function TransactionList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockTransactions.map((transaction) => {
-                const Icon = transaction.icon
+              {transactionList.map((transaction) => {
+                const Icon = getCategoryIcon(transaction.category)
                 const isIncome = transaction.type === "income"
 
                 return (
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium">
-                      {new Date(transaction.date).toLocaleDateString("es-ES")}
+                      {new Date(transaction.transaction_date).toLocaleDateString("es-ES")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-3">

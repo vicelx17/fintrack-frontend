@@ -161,7 +161,6 @@ export const dashboardApi = {
                 method: 'GET',
                 headers: getAuthHeaders(),
             });
-
             const result = await handleResponse<ApiResponse<any>>(response);
             return result.data;
         },

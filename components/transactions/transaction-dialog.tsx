@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { CalendarIcon } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface TransactionDialogProps {
   open: boolean
@@ -57,9 +57,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
     ],
     income: ["Salario", "Freelance", "Inversiones", "Bonos", "Otros Ingresos"],
   }
-
-  const accounts = ["Cuenta Corriente", "Cuenta de Ahorros", "Tarjeta de Crédito", "Tarjeta de Débito", "Efectivo"]
-
   useEffect(() => {
     if (transaction) {
       setFormData({
@@ -194,7 +191,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
           </Tabs>
 
           {/* Description and Account */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="description">Descripción *</Label>
               <Input
@@ -204,22 +201,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="account">Cuenta *</Label>
-              <Select value={formData.account} onValueChange={(value) => handleInputChange("account", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar cuenta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account} value={account}>
-                      {account}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

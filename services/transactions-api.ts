@@ -7,7 +7,7 @@ export interface Transaction {
   description: string
   category: string
   account: string
-  date: string
+  transaction_date: string
   notes?: string
   createdAt: string
   updatedAt: string
@@ -31,19 +31,38 @@ export interface TransactionStats {
   categoryBreakdown: { category: string; amount: number }[]
 }
 
+export interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    error?: string;
+}
+
 // API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = "http://localhost:8000"
 
-export class TransactionService {
-  private static getAuthHeaders() {
-    const token = localStorage.getItem("fintrack_token")
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    }
+function getAuthHeaders() {
+  const token = localStorage.getItem('fintrack_token');
+  console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    console.log('Response status:', response.status);
+    console.log('Response URL:', response.url);
+    const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
+    console.error('API Error:', errorData);
+    throw new Error(errorData.detail || 'HTPP ${response.status}');
   }
+  const data = await response.json();
+  return data;
+}
 
-  static async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+export const transactionsApi = {
+  async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
     try {
       const queryParams = new URLSearchParams()
 
@@ -54,9 +73,8 @@ export class TransactionService {
           }
         })
       }
-
       const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -68,12 +86,12 @@ export class TransactionService {
     }
 
     return []
-  }
+  },
 
-  static async getTransaction(id: string): Promise<Transaction | null> {
+  async getTransaction(id: string): Promise<Transaction | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -85,15 +103,15 @@ export class TransactionService {
     }
 
     return null
-  }
+  },
 
-  static async createTransaction(
+  async createTransaction(
     transactionData: Omit<Transaction, "id" | "userId" | "createdAt" | "updatedAt">,
   ): Promise<Transaction | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: "POST",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(transactionData),
       })
 
@@ -106,13 +124,13 @@ export class TransactionService {
     }
 
     return null
-  }
+  },
 
-  static async updateTransaction(id: string, transactionData: Partial<Transaction>): Promise<Transaction | null> {
+  async updateTransaction(id: string, transactionData: Partial<Transaction>): Promise<Transaction | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: "PUT",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(transactionData),
       })
 
@@ -125,13 +143,13 @@ export class TransactionService {
     }
 
     return null
-  }
+  },
 
-  static async deleteTransaction(id: string): Promise<boolean> {
+  async deleteTransaction(id: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: "DELETE",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       return response.ok
@@ -140,13 +158,13 @@ export class TransactionService {
     }
 
     return false
-  }
+  },
 
-  static async getTransactionStats(dateRange?: string): Promise<TransactionStats | null> {
+  async getTransactionStats(dateRange?: string): Promise<TransactionStats | null> {
     try {
       const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
       const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -158,9 +176,9 @@ export class TransactionService {
     }
 
     return null
-  }
+  },
 
-  static async importTransactions(file: File): Promise<{ success: boolean; imported: number; errors: string[] }> {
+  async importTransactions(file: File): Promise<{ success: boolean; imported: number; errors: string[] }> {
     try {
       const formData = new FormData()
       formData.append("file", file)
@@ -181,9 +199,9 @@ export class TransactionService {
     }
 
     return { success: false, imported: 0, errors: ["Error de conexión"] }
-  }
+  },
 
-  static async exportTransactions(format: "csv" | "json" | "pdf", filters?: TransactionFilters): Promise<Blob | null> {
+  async exportTransactions(format: "csv" | "json" | "pdf", filters?: TransactionFilters): Promise<Blob | null> {
     try {
       const queryParams = new URLSearchParams({ format })
 
@@ -196,7 +214,7 @@ export class TransactionService {
       }
 
       const response = await fetch(`${API_BASE_URL}/transactions/export?${queryParams.toString()}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -207,5 +225,20 @@ export class TransactionService {
     }
 
     return null
-  }
-}
+  },
+
+  async getCompleteTransaction(): Promise< {
+    transaction_summary: TransactionStats;
+    filters: TransactionFilters;
+    transacions: Transaction;
+  } > {
+      const response = await fetch(`${API_BASE_URL}/transactions/complete`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+      const result = await handleResponse<ApiResponse<any>>(response);
+      return result.data;
+    }
+  };
+
+export default transactionsApi;

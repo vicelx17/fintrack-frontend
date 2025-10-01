@@ -1,11 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useTransaction } from "@/contexts/transaction-context"
+import { TransactionProvider, useTransaction } from "@/contexts/transaction-context"
 import { Download, Plus, Upload } from "lucide-react"
 
 export function TransactionHeader() {
-  const { openDialog } = useTransaction()
+  const { openTransactionDialog } = useTransaction()
 
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm">
@@ -25,10 +25,14 @@ export function TransactionHeader() {
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-            <Button onClick={() => openDialog()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Transacción
-            </Button>
+            <TransactionProvider>
+              
+              <Button onClick={() => openTransactionDialog()}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nueva Transacción
+              </Button>
+            </TransactionProvider>
+
           </div>
         </div>
       </div>
