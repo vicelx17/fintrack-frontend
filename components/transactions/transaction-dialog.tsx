@@ -18,9 +18,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { categoriesApi, type Category } from "@/services/categories-api"
+import { transactionsApi, type TransactionCreate } from "@/services/transactions-api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface TransactionDialogProps {
@@ -28,44 +31,58 @@ interface TransactionDialogProps {
   onOpenChange: (open: boolean) => void
   transaction?: any
   onClose?: () => void
+  onSuccess?: () => void
 }
 
-export function TransactionDialog({ open, onOpenChange, transaction, onClose }: TransactionDialogProps) {
+export function TransactionDialog({ open, onOpenChange, transaction, onClose, onSuccess }: TransactionDialogProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
-    type: "expense",
+    type: "expense" as "income" | "expense",
     amount: "",
     description: "",
-    category: "",
-    account: "",
+    categoryId: "",
     date: new Date(),
     notes: "",
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
 
-  const categories = {
-    expense: [
-      "Alimentación",
-      "Transporte",
-      "Entretenimiento",
-      "Servicios",
-      "Compras",
-      "Salud",
-      "Educación",
-      "Vivienda",
-      "Otros",
-    ],
-    income: ["Salario", "Freelance", "Inversiones", "Bonos", "Otros Ingresos"],
-  }
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const allCategories = await categoriesApi.getCategories()
+        setCategories(allCategories)
+      } catch (error) {
+        console.error("Error al cargar categorías:", error)
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar las categorías",
+          variant: "destructive",
+        })
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    if (open) {
+      fetchCategories()
+    }
+  }, [open, toast])
+
+  // Filtrar categorías según el tipo seleccionado
+  const allCategories = categories
+
   useEffect(() => {
     if (transaction) {
       setFormData({
         type: transaction.type,
         amount: Math.abs(transaction.amount).toString(),
         description: transaction.description,
-        category: transaction.category,
-        account: transaction.account,
-        date: new Date(transaction.date),
+        categoryId: transaction.categoryId?.toString() || "",
+        date: new Date(transaction.transactionDate),
         notes: transaction.notes || "",
       })
     } else {
@@ -73,24 +90,85 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
         type: "expense",
         amount: "",
         description: "",
-        category: "",
-        account: "",
+        categoryId: "",
         date: new Date(),
         notes: "",
       })
     }
-  }, [transaction])
+  }, [transaction, open])
+
+  // Limpiar categoría y cantidad seleccionada cuando cambia el tipo
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      categoryId: "",
+      amount: "",
+    }))
+  }, [formData.type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Validar que se haya seleccionado una categoría
+      if (!formData.categoryId) {
+        toast({
+          title: "Error",
+          description: "Por favor selecciona una categoría",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      const transactionData: TransactionCreate = {
+        type: formData.type,
+        amount: parseFloat(formData.amount),
+        description: formData.description,
+        category_id: parseInt(formData.categoryId),
+        transaction_date: format(formData.date, "yyyy-MM-dd"),
+        notes: formData.notes || undefined,
+      }
+
+      if (transaction) {
+        await transactionsApi.updateTransaction(transaction.id, transactionData as any)
+        toast({
+          title: "Éxito",
+          description: "Transacción actualizada correctamente",
+        })
+      } else {
+        // Crear nueva transacción
+        await transactionsApi.createTransaction(transactionData)
+        toast({
+          title: "Éxito",
+          description: "Transacción creada correctamente",
+        })
+      }
+
       onOpenChange(false)
+      
       if (onClose) onClose()
-    }, 1000)
+      if (onSuccess) onSuccess()
+
+      setFormData({
+        type: "expense",
+        amount: "",
+        description: "",
+        categoryId: "",
+        date: new Date(),
+        notes: "",
+      })
+    } catch (error) {
+      console.error("Error al guardar transacción:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo guardar la transacción",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleInputChange = (field: string, value: any) => {
@@ -125,9 +203,19 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
                       id="amount"
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
+                      min="-9999999"
+                      max="-0.01"
+                      placeholder="-0.01"
                       value={formData.amount}
-                      onChange={(e) => handleInputChange("amount", e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (
+                          value === "" ||
+                          (/^-?\d*\.?\d*$/.test(value) && parseFloat(value) < 0)
+                        ) {
+                          handleInputChange("amount", value)
+                        }
+                      }}
                       className="pl-8"
                       required
                     />
@@ -136,16 +224,30 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Categoría *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Select 
+                    value={formData.categoryId} 
+                    onValueChange={(value) => handleInputChange("categoryId", value)}
+                    disabled={loadingCategories}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
+                      <SelectValue placeholder={loadingCategories ? "Cargando..." : "Seleccionar categoría"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.expense.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      {loadingCategories ? (
+                        <div className="flex items-center justify-center p-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                      ) : allCategories.length > 0 ? (
+                        allCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-4 text-sm text-muted-foreground text-center">
+                          No hay categorías disponibles
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -162,9 +264,18 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
                       id="amount"
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
+                      min="0.01"
+                      placeholder="0.01"
                       value={formData.amount}
-                      onChange={(e) => handleInputChange("amount", e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (
+                          value === "" ||
+                          (/^\d*\.?\d*$/.test(value) && parseFloat(value) > 0)
+                        ) {
+                          handleInputChange("amount", value)
+                        }
+                      }}
                       className="pl-8"
                       required
                     />
@@ -173,16 +284,30 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Categoría *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Select 
+                    value={formData.categoryId} 
+                    onValueChange={(value) => handleInputChange("categoryId", value)}
+                    disabled={loadingCategories}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
+                      <SelectValue placeholder={loadingCategories ? "Cargando..." : "Seleccionar categoría"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.income.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      {loadingCategories ? (
+                        <div className="flex items-center justify-center p-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                      ) : allCategories.length > 0 ? (
+                        allCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-4 text-sm text-muted-foreground text-center">
+                          No hay categorías disponibles
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -190,7 +315,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
             </TabsContent>
           </Tabs>
 
-          {/* Description and Account */}
+          {/* Description */}
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="description">Descripción *</Label>
@@ -218,8 +343,9 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
                 <Calendar
                   mode="single"
                   selected={formData.date}
-                  onSelect={(date) => handleInputChange("date", date)}
-                  initialFocus
+                  onSelect={(date) => handleInputChange("date", date || new Date())}
+                  autoFocus
+                  disabled={(date) => date > new Date()} 
                 />
               </PopoverContent>
             </Popover>
@@ -238,11 +364,18 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose }: 
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Guardando..." : transaction ? "Actualizar" : "Crear Transacción"}
+            <Button type="submit" disabled={isLoading || loadingCategories}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                transaction ? "Actualizar" : "Crear Transacción"
+              )}
             </Button>
           </DialogFooter>
         </form>

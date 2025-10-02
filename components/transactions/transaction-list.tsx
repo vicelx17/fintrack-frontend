@@ -77,7 +77,7 @@ export function TransactionList() {
                 return (
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium">
-                      {new Date(transaction.transaction_date).toLocaleDateString("es-ES")}
+                      {new Date(transaction.transactionDate).toLocaleDateString("es-ES")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-3">
@@ -90,7 +90,6 @@ export function TransactionList() {
                     <TableCell>
                       <Badge variant="outline">{transaction.category}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{transaction.account}</TableCell>
                     <TableCell className={`text-right font-semibold ${isIncome ? "text-primary" : "text-foreground"}`}>
                       {isIncome ? "+" : ""}€{Math.abs(transaction.amount).toFixed(2)}
                     </TableCell>

@@ -1,3 +1,4 @@
+
 // Transaction management utilities and API integration
 export interface Transaction {
   id: string
@@ -6,11 +7,19 @@ export interface Transaction {
   amount: number
   description: string
   category: string
-  account: string
-  transaction_date: string
+  transactionDate: string
   notes?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface TransactionCreate {
+  type: "income" | "expense"
+  amount: number
+  description: string
+  category_id: number
+  transaction_date?: string
+  notes?: string
 }
 
 export interface TransactionFilters {
@@ -18,7 +27,6 @@ export interface TransactionFilters {
   category?: string
   type?: "income" | "expense"
   dateRange?: string
-  account?: string
   minAmount?: number
   maxAmount?: number
 }
@@ -32,9 +40,9 @@ export interface TransactionStats {
 }
 
 export interface ApiResponse<T> {
-    success: boolean;
-    data: T;
-    error?: string;
+  success: boolean;
+  data: T;
+  error?: string;
 }
 
 // API Base URL
@@ -88,7 +96,7 @@ export const transactionsApi = {
     return []
   },
 
-  async getTransaction(id: string): Promise<Transaction | null> {
+  async getTransactionById(id: string): Promise<Transaction | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         headers: getAuthHeaders(),
@@ -105,25 +113,20 @@ export const transactionsApi = {
     return null
   },
 
-  async createTransaction(
-    transactionData: Omit<Transaction, "id" | "userId" | "createdAt" | "updatedAt">,
-  ): Promise<Transaction | null> {
+  async createTransaction(transactionData: TransactionCreate): Promise<Transaction> {
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(transactionData),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        return data.transaction
-      }
+      const result = await handleResponse<Transaction>(response)
+      return result
     } catch (error) {
       console.error("Error creating transaction:", error)
+      throw error
     }
-
-    return null
   },
 
   async updateTransaction(id: string, transactionData: Partial<Transaction>): Promise<Transaction | null> {
@@ -160,85 +163,49 @@ export const transactionsApi = {
     return false
   },
 
-  async getTransactionStats(dateRange?: string): Promise<TransactionStats | null> {
+  async getTransactionStats(dateRange?: string): Promise<{
+    totalTransactions: number;
+    totalIncome: number;
+    totalExpenses: number;
+    averageDaily: number;
+  } | null> {
     try {
-      const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
+      const queryParams = dateRange ? `?dateRange=${dateRange}` : "";
       const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
         headers: getAuthHeaders(),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.stats
-      }
+      });
+      return await handleResponse(response)
     } catch (error) {
-      console.error("Error fetching transaction stats:", error)
+      console.error("Error fetching transaction stats:", error);
+      return null;
     }
-
-    return null
   },
 
-  async importTransactions(file: File): Promise<{ success: boolean; imported: number; errors: string[] }> {
+  async getCategoryBreakdown(dateRange?: string): Promise<Array<{ category: string; amount: number }> | null> {
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-
-      const response = await fetch(`${API_BASE_URL}/transactions/import`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("fintrack_token")}`,
-        },
-        body: formData,
-      })
-
-      if (response.ok) {
-        return await response.json()
-      }
-    } catch (error) {
-      console.error("Error importing transactions:", error)
-    }
-
-    return { success: false, imported: 0, errors: ["Error de conexión"] }
-  },
-
-  async exportTransactions(format: "csv" | "json" | "pdf", filters?: TransactionFilters): Promise<Blob | null> {
-    try {
-      const queryParams = new URLSearchParams({ format })
-
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== "") {
-            queryParams.append(key, value.toString())
-          }
-        })
-      }
-
-      const response = await fetch(`${API_BASE_URL}/transactions/export?${queryParams.toString()}`, {
+      const queryParams = dateRange ? `?dateRange=${dateRange}` : "";
+      const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown${queryParams}`, {
         headers: getAuthHeaders(),
-      })
-
-      if (response.ok) {
-        return await response.blob()
-      }
+      });
+      return await handleResponse(response)
     } catch (error) {
-      console.error("Error exporting transactions:", error)
+      console.error("Error fetching category breakdown:", error);
+      return null;
     }
-
-    return null
   },
 
-  async getCompleteTransaction(): Promise< {
+  async getCompleteTransaction(): Promise<{
     transaction_summary: TransactionStats;
     filters: TransactionFilters;
     transacions: Transaction;
-  } > {
-      const response = await fetch(`${API_BASE_URL}/transactions/complete`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      });
-      const result = await handleResponse<ApiResponse<any>>(response);
-      return result.data;
-    }
-  };
+  }> {
+    const response = await fetch(`${API_BASE_URL}/transactions/complete`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    const result = await handleResponse<ApiResponse<any>>(response);
+    return result.data;
+  }
+};
 
 export default transactionsApi;
