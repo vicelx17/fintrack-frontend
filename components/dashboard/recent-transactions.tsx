@@ -72,6 +72,7 @@ export function RecentTransactions() {
               recentTransactions.map((transaction) => {
                 const Icon = getCategoryIcon(transaction.category)
                 const isIncome = transaction.type === "income"
+                const isExpense = transaction.type === "expense"
 
                 return (
                   <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors">
@@ -96,8 +97,18 @@ export function RecentTransactions() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`font-semibold ${isIncome ? "text-primary" : "text-foreground"}`}>
-                        {isIncome ? "+" : ""}€{Math.abs(transaction.amount).toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                      <span
+                        className={`font-semibold ${
+                          isIncome
+                            ? "text-primary"
+                            : isExpense
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {isIncome && "+"}
+                        {isExpense && "-"}
+                        €{Math.abs(transaction.amount).toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                       </span>
                       <Button variant="ghost" size="icon" className="w-8 h-8">
                         <MoreHorizontal className="w-4 h-4" />

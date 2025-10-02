@@ -1,4 +1,3 @@
-
 // Transaction management utilities and API integration
 export interface Transaction {
   id: string
@@ -45,7 +44,6 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// API Base URL
 const API_BASE_URL = "http://localhost:8000"
 
 function getAuthHeaders() {
@@ -63,7 +61,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     console.log('Response URL:', response.url);
     const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
     console.error('API Error:', errorData);
-    throw new Error(errorData.detail || 'HTPP ${response.status}');
+    throw new Error(errorData.detail || `HTTP ${response.status}`);
   }
   const data = await response.json();
   return data;
@@ -81,19 +79,44 @@ export const transactionsApi = {
           }
         })
       }
+      
+      console.log('Fetching transactions from:', `${API_BASE_URL}/transactions?${queryParams.toString()}`)
+      
       const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        return data.transactions || []
+      console.log('Response status:', response.status, response.ok)
+
+      if (!response.ok) {
+        console.error('Response not OK:', response.status)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const data = await response.json()
+      console.log('Fetched transactions RAW:', data)
+      console.log('Is Array?:', Array.isArray(data))
+      console.log('Length:', Array.isArray(data) ? data.length : 'N/A')
+      
+      // CORRECCIÓN: El backend devuelve un array directamente
+      if (Array.isArray(data)) {
+        console.log('Returning array with', data.length, 'transactions')
+        return data
+      }
+      
+      // Si por alguna razón viene en un objeto, mantenemos la compatibilidad
+      if (data.transactions && Array.isArray(data.transactions)) {
+        console.log('Returning data.transactions with', data.transactions.length, 'transactions')
+        return data.transactions
+      }
+      
+      console.warn('Unexpected data format, returning empty array')
+      return []
+      
     } catch (error) {
       console.error("Error fetching transactions:", error)
+      throw error // Propaga el error al hook
     }
-
-    return []
   },
 
   async getTransactionById(id: string): Promise<Transaction | null> {
@@ -104,7 +127,7 @@ export const transactionsApi = {
 
       if (response.ok) {
         const data = await response.json()
-        return data.transaction
+        return data.transaction || data
       }
     } catch (error) {
       console.error("Error fetching transaction:", error)
@@ -139,7 +162,7 @@ export const transactionsApi = {
 
       if (response.ok) {
         const data = await response.json()
-        return data.transaction
+        return data.transaction || data
       }
     } catch (error) {
       console.error("Error updating transaction:", error)

@@ -25,7 +25,6 @@ export function useTransactions() {
     const loadTransactions = async () => {
         setLoading('transactions', true);
         try {
-            console.log('🚀 Cargando transacciones...');
             const data = await transactionsApi.getTransactions();
             setTransactionList(data);
             setLoading('transactions', false);
@@ -49,6 +48,7 @@ useEffect(() => {
         loading: loadingStates,
 
         loadTransactions,
+        refreshTransactionList,
 
         isAnyLoading: Object.values(loadingStates).some(state => state.isLoading),
         hasAnyError: Object.values(loadingStates).some(state => state.error !== null),
