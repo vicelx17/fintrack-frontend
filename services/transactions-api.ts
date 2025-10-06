@@ -35,36 +35,37 @@ export interface TransactionStats {
   totalIncome: number
   totalExpenses: number
   averageDaily: number
-  categoryBreakdown: { category: string; amount: number }[]
+}
+
+export interface CategoryBreakdown {
+  category: string
+  amount: number
 }
 
 export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: string;
+  success: boolean
+  data: T
+  error?: string
 }
 
 const API_BASE_URL = "http://localhost:8000"
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('fintrack_token');
-  console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
+  const token = localStorage.getItem('fintrack_token')
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` }),
-  };
+  }
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    console.log('Response status:', response.status);
-    console.log('Response URL:', response.url);
-    const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
-    console.error('API Error:', errorData);
-    throw new Error(errorData.detail || `HTTP ${response.status}`);
+    const errorData = await response.json().catch(() => ({ detail: 'Network error' }))
+    console.error('API Error:', errorData)
+    throw new Error(errorData.detail || `HTTP ${response.status}`)
   }
-  const data = await response.json();
-  return data;
+  const data = await response.json()
+  return data
 }
 
 export const transactionsApi = {
@@ -80,42 +81,86 @@ export const transactionsApi = {
         })
       }
       
-      console.log('Fetching transactions from:', `${API_BASE_URL}/transactions?${queryParams.toString()}`)
-      
       const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
 
-      console.log('Response status:', response.status, response.ok)
-
       if (!response.ok) {
-        console.error('Response not OK:', response.status)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log('Fetched transactions RAW:', data)
-      console.log('Is Array?:', Array.isArray(data))
-      console.log('Length:', Array.isArray(data) ? data.length : 'N/A')
       
-      // CORRECCIÓN: El backend devuelve un array directamente
       if (Array.isArray(data)) {
-        console.log('Returning array with', data.length, 'transactions')
         return data
       }
       
-      // Si por alguna razón viene en un objeto, mantenemos la compatibilidad
       if (data.transactions && Array.isArray(data.transactions)) {
-        console.log('Returning data.transactions with', data.transactions.length, 'transactions')
         return data.transactions
       }
       
-      console.warn('Unexpected data format, returning empty array')
       return []
       
     } catch (error) {
       console.error("Error fetching transactions:", error)
-      throw error // Propaga el error al hook
+      throw error
+    }
+  },
+
+  async getTransactionStats(dateRange?: string): Promise<TransactionStats> {
+    try {
+      const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
+      const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
+        headers: getAuthHeaders(),
+      })
+      const result = await handleResponse<ApiResponse<TransactionStats>>(response)
+      return result.data
+    } catch (error) {
+      console.error("Error fetching transaction stats:", error)
+      throw error
+    }
+  },
+
+  async getCategoryBreakdown(dateRange?: string): Promise<CategoryBreakdown[]> {
+    try {
+      const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
+      const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown${queryParams}`, {
+        headers: getAuthHeaders(),
+      })
+      const result = await handleResponse<ApiResponse<CategoryBreakdown[]>>(response)
+      return result.data
+    } catch (error) {
+      console.error("Error fetching category breakdown:", error)
+      throw error
+    }
+  },
+
+  async getCompleteTransactions(filters?: TransactionFilters): Promise<{
+    transactions: Transaction[]
+    stats: TransactionStats
+    category_breakdown: CategoryBreakdown[]
+  }> {
+    try {
+      const queryParams = new URLSearchParams()
+
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== "") {
+            queryParams.append(key, value.toString())
+          }
+        })
+      }
+
+      const response = await fetch(`${API_BASE_URL}/transactions/complete?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      })
+      
+      const result = await handleResponse<ApiResponse<any>>(response)
+      return result.data
+    } catch (error) {
+      console.error("Error fetching complete transactions:", error)
+      throw error
     }
   },
 
@@ -185,50 +230,6 @@ export const transactionsApi = {
 
     return false
   },
+}
 
-  async getTransactionStats(dateRange?: string): Promise<{
-    totalTransactions: number;
-    totalIncome: number;
-    totalExpenses: number;
-    averageDaily: number;
-  } | null> {
-    try {
-      const queryParams = dateRange ? `?dateRange=${dateRange}` : "";
-      const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
-        headers: getAuthHeaders(),
-      });
-      return await handleResponse(response)
-    } catch (error) {
-      console.error("Error fetching transaction stats:", error);
-      return null;
-    }
-  },
-
-  async getCategoryBreakdown(dateRange?: string): Promise<Array<{ category: string; amount: number }> | null> {
-    try {
-      const queryParams = dateRange ? `?dateRange=${dateRange}` : "";
-      const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown${queryParams}`, {
-        headers: getAuthHeaders(),
-      });
-      return await handleResponse(response)
-    } catch (error) {
-      console.error("Error fetching category breakdown:", error);
-      return null;
-    }
-  },
-
-  async getCompleteTransaction(): Promise<{
-    transaction_summary: TransactionStats;
-    filters: TransactionFilters;
-    transacions: Transaction;
-  }> {
-    const response = await fetch(`${API_BASE_URL}/transactions/complete`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    const result = await handleResponse<ApiResponse<any>>(response);
-    return result.data;
-  }
-};
-
-export default transactionsApi;
+export default transactionsApi

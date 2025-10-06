@@ -33,14 +33,7 @@ export function TransactionList() {
   const [editingTransaction, setEditingTransaction] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   
-  // CORRECCIÓN: El hook exporta 'loading' no 'loadingStates'
   const { transactionList, loading } = useTransactions()
-  
-  console.log("TransactionList render", { 
-    transactionList, 
-    count: transactionList.length,
-    loading: loading.transactions 
-  })
 
   const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction)
@@ -62,7 +55,6 @@ export function TransactionList() {
           <CardTitle>Lista de Transacciones</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* CORRECCIÓN: Agregar estados de carga y vacío */}
           {loading.transactions.isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Cargando transacciones...

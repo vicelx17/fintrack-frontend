@@ -1,33 +1,69 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, ArrowUpDown, Calendar } from "lucide-react"
+import { useTransactions } from "@/hooks/use-transactions"
+import { ArrowUpDown, Calendar, TrendingDown, TrendingUp } from "lucide-react"
 
 export function TransactionStats() {
+  const { transactionStats, loading } = useTransactions()
+
+  if (loading.stats.isLoading || !transactionStats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-32 mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded w-28"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (loading.stats.error) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="col-span-full">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-500">Error cargando estadísticas: {loading.stats.error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const stats = [
     {
       title: "Total Transacciones",
-      value: "247",
+      value: transactionStats.totalTransactions.toString(),
       subtitle: "Este mes",
       icon: ArrowUpDown,
       color: "text-primary",
     },
     {
       title: "Total Ingresos",
-      value: "€4,200.00",
-      subtitle: "+8.2% vs mes anterior",
+      value: `€${transactionStats.totalIncome.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      subtitle: "Período seleccionado",
       icon: TrendingUp,
       color: "text-primary",
     },
     {
       title: "Total Gastos",
-      value: "€2,850.30",
-      subtitle: "-3.1% vs mes anterior",
+      value: `€${transactionStats.totalExpenses.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      subtitle: "Período seleccionado",
       icon: TrendingDown,
       color: "text-secondary",
     },
     {
       title: "Promedio Diario",
-      value: "€43.55",
-      subtitle: "Últimos 30 días",
+      value: `€${transactionStats.averageDaily.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      subtitle: "Balance neto",
       icon: Calendar,
       color: "text-muted-foreground",
     },
