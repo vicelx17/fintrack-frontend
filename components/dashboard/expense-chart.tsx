@@ -3,12 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDashboard } from "@/hooks/use-dashboard"
+import { useCategoryData, useMonthlyData } from "@/hooks/use-dashboard"
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 
 export function ExpenseChart() {
-
-  const { monthlyData, categoryData, loading } = useDashboard()
+  const { data: monthlyData, isLoading: loadingMonthly, error: errorMonthly } = useMonthlyData(6)
+  const { data: categoryData, isLoading: loadingCategory, error: errorCategory } = useCategoryData()
 
   return (
     <Card>
@@ -24,13 +24,13 @@ export function ExpenseChart() {
           </TabsList>
 
           <TabsContent value="monthly" className="space-y-4">
-            {loading.monthly.isLoading ? (
+            {loadingMonthly ? (
               <div className="h-[300px] flex items-center justify-center">
                 <p className="text-muted-foreground">Cargando datos mensuales...</p>
               </div>
-            ) : loading.monthly.error ? (
+            ) : errorMonthly ? (
               <div className="h-[300px] flex items-center justify-center">
-                <p className="text-red-500">Error: {loading.monthly.error}</p>
+                <p className="text-red-500">Error: {errorMonthly}</p>
               </div>
             ) : monthlyData.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center">
@@ -82,13 +82,13 @@ export function ExpenseChart() {
           </TabsContent>
 
           <TabsContent value="categories" className="space-y-4">
-            {loading.category.isLoading ? (
+            {loadingCategory ? (
               <div className="h-[300px] flex items-center justify-center">
                 <p className="text-muted-foreground">Cargando categorías...</p>
               </div>
-            ) : loading.category.error ? (
+            ) : errorCategory ? (
               <div className="h-[300px] flex items-center justify-center">
-                <p className="text-red-500">Error: {loading.category.error}</p>
+                <p className="text-red-500">Error: {errorCategory}</p>
               </div>
             ) : categoryData.length === 0 ? (
               <div className="h-[300px] flex items-center justify-center">

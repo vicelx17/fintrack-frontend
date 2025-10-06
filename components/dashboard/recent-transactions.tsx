@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDashboard } from "@/hooks/use-dashboard"
+import { useRecentTransactions } from "@/hooks/use-dashboard"
 import { ArrowUpRight, Car, Coffee, Home, MoreHorizontal, ShoppingCart } from "lucide-react"
 
 // Mapeo de categorías a iconos
@@ -11,16 +11,15 @@ const categoryIcons: { [key: string]: any } = {
   "Vivienda": Home,
   "Entretenimiento": Coffee,
   "Ingresos": ArrowUpRight,
-  // Agregar más si tenemos más categorías
 }
 
-// Obtener icono por categoría
 const getCategoryIcon = (category: string) => {
-  return categoryIcons[category] || ShoppingCart // Icono por defecto
+  return categoryIcons[category] || ShoppingCart
 }
 
 export function RecentTransactions() {
-  const { recentTransactions, loading } = useDashboard()
+  const { data: recentTransactions, isLoading, error, reload } = useRecentTransactions(10)
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -33,8 +32,7 @@ export function RecentTransactions() {
         </Button>
       </CardHeader>
       <CardContent>
-        {/* Mostrar loading */}
-        {loading.recent.isLoading && (
+        {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg border animate-pulse">
@@ -51,18 +49,16 @@ export function RecentTransactions() {
           </div>
         )}
 
-        {/* Mostrar error */}
-        {loading.recent.error && (
+        {error && (
           <div className="text-center py-8">
-            <p className="text-red-500">Error: {loading.recent.error}</p>
-            <Button variant="outline" size="sm" className="mt-2">
+            <p className="text-red-500">Error: {error}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={reload}>
               Reintentar
             </Button>
           </div>
         )}
 
-        {/* Mostrar datos reales */}
-        {!loading.recent.isLoading && !loading.recent.error && (
+        {!isLoading && !error && (
           <div className="space-y-4">
             {recentTransactions.length === 0 ? (
               <div className="text-center py-8">

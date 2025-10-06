@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDashboard } from "@/hooks/use-dashboard"
+import { useFinancialSummary } from "@/hooks/use-dashboard"
 import { CreditCard, EuroIcon, PiggyBank, TrendingDown, TrendingUp } from "lucide-react"
 
 export function FinancialSummary() {
-  const {financialSummary, loading} = useDashboard()
-  console.log('FinancialSummary - financialSummary:', financialSummary)
-  console.log('FinancialSummary - loading:', loading)
-  if (loading.financial.isLoading || !financialSummary) {
+  const { data: financialSummary, isLoading, error } = useFinancialSummary()
+
+  if (isLoading || !financialSummary) {
     return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="relative overflow-hidden animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -24,12 +23,13 @@ export function FinancialSummary() {
       </div>
     )
   }
-  if (loading.financial.error) {
+
+  if (error) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="col-span-full">
           <CardContent className="p-6 text-center">
-            <p className="text-red-500">Error cargando datos financieros: {loading.financial.error}</p>
+            <p className="text-red-500">Error cargando datos financieros: {error}</p>
           </CardContent>
         </Card>
       </div>

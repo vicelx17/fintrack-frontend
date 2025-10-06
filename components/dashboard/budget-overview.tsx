@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { useDashboard } from "@/hooks/use-dashboard"
+import { useBudgetOverview } from "@/hooks/use-dashboard"
 
 export function BudgetOverview() {
-  const { budgetOverview, loading } = useDashboard()
+  const { data: budgetOverview, isLoading, error } = useBudgetOverview()
 
   return (
     <Card>
@@ -12,8 +12,7 @@ export function BudgetOverview() {
         <CardTitle>Presupuestos del Mes</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Mostrar loading */}
-        {loading.budget.isLoading && (
+        {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="space-y-2 animate-pulse">
@@ -27,15 +26,13 @@ export function BudgetOverview() {
           </div>
         )}
 
-        {/* Mostrar error */}
-        {loading.budget.error && (
+        {error && (
           <div className="text-center py-8">
-            <p className="text-red-500">Error: {loading.budget.error}</p>
+            <p className="text-red-500">Error: {error}</p>
           </div>
         )}
 
-        {/* Mostrar datos */}
-        {!loading.budget.isLoading && !loading.budget.error && (
+        {!isLoading && !error && (
           <div className="space-y-4">
             {budgetOverview.length === 0 ? (
               <div className="text-center py-8">

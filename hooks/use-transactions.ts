@@ -121,7 +121,6 @@ export function useTransactions(filters?: TransactionFilters) {
     }, [])
 
     return {
-        // Data
         transactionList,
         transactionStats,
         categoryBreakdown,

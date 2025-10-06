@@ -13,21 +13,18 @@ export function useDashboard(){
     const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([])
     const [budgetOverview, setBudgetOverview] = useState<BudgetOverview[]>([])
 
-
     const [loadingStates, setLoadingStates] = useState<{
         financial: LoadingState;
         monthly: LoadingState;
         category: LoadingState;
         recent: LoadingState;
         budget: LoadingState;
-        complete: LoadingState;
     }>({
         financial: { isLoading: false, error: null },
         monthly: { isLoading: false, error: null },
         category: { isLoading: false, error: null },
         recent: { isLoading: false, error: null },
         budget: { isLoading: false, error: null },
-        complete: { isLoading: false, error: null },
     });
 
     const setLoading = (key: keyof typeof loadingStates, isLoading: boolean, error: string | null = null) => {
@@ -37,36 +34,6 @@ export function useDashboard(){
         }));
     };
 
-    const loadCompleteDashboard = async () => {
-        setLoading('complete', true);
-        try {
-            console.log('🚀 Cargando dashboard completo...');
-            const data = await dashboardApi.getCompleteDashboard();
-            console.log('✅ Datos recibidos del backend:', data);
-
-            setFinancialSummary(data.financial_summary);
-            setMonthlyData(data.monthly_chart);
-            setCategoryData(data.category_chart);
-            setRecentTransactions(data.recent_transactions);
-            setBudgetOverview(data.budget_overview);
-
-            console.log('✅ Estados actualizados');
-            console.log('Financial Summary:', data.financial_summary);
-
-            setLoadingStates({
-                financial: { isLoading: false, error: null },
-                monthly: { isLoading: false, error: null },
-                category: { isLoading: false, error: null },
-                recent: { isLoading: false, error: null },
-                budget: { isLoading: false, error: null },
-                complete: { isLoading: false, error: null },
-            });
-        } catch (error: any) {
-            const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-            console.error("Error loading complete dashboard:", error);
-            setLoading('complete', false, errorMessage);
-        }
-    };
 
     const loadFinancialSummary = async () => {
         setLoading('financial', true);
@@ -128,17 +95,16 @@ export function useDashboard(){
         }
     };
 
-    const refreshAll = () => {
-        loadCompleteDashboard();
-    }
-
-    const refreshFinancial = () => {
-        loadFinancialSummary();
+    const refreshAll = async () => {
+        await Promise.all([
+            loadFinancialSummary(),
+            loadMonthlyData(),
+            loadCategoryData(),
+            loadRecentTransactions(),
+            loadBudgetOverview()
+        ]);
     };
 
-    useEffect(() => {
-        loadCompleteDashboard();
-    }, []);
 
     return {
         financialSummary,
@@ -149,14 +115,12 @@ export function useDashboard(){
         
         loading: loadingStates,
 
-        loadCompleteDashboard,
         loadFinancialSummary,
         loadMonthlyData,
         loadCategoryData,
         loadRecentTransactions,
         loadBudgetOverview,
         refreshAll,
-        refreshFinancial,
 
         isAnyLoading: Object.values(loadingStates).some(state => state.isLoading),
         hasAnyError: Object.values(loadingStates).some(state => state.error !== null),
@@ -177,7 +141,57 @@ export function useFinancialSummary(){
             setError(null);
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Error desconocido');
-        }finally{
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+    }, []);
+
+    return { data, isLoading, error, reload: load };
+}
+
+export function useMonthlyData(months: number = 6){
+    const [data, setData] = useState<MonthlyData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const load = async () => {
+        setIsLoading(true);
+        try {
+            const result = await dashboardApi.getMonthlyData(months);
+            setData(result);
+            setError(null);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Error desconocido');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+    }, [months]);
+
+    return { data, isLoading, error, reload: load };
+}
+
+export function useCategoryData(){
+    const [data, setData] = useState<CategoryData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const load = async () => {
+        setIsLoading(true);
+        try {
+            const result = await dashboardApi.getCategoryData();
+            setData(result);
+            setError(null);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Error desconocido');
+        } finally {
             setIsLoading(false);
         }
     };
@@ -202,7 +216,7 @@ export function useRecentTransactions(limit: number = 10){
             setError(null);
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Error desconocido');
-        }finally{
+        } finally {
             setIsLoading(false);
         }
     };
@@ -210,6 +224,31 @@ export function useRecentTransactions(limit: number = 10){
     useEffect(() => {
         load();
     }, [limit]);
+
+    return { data, isLoading, error, reload: load };
+}
+
+export function useBudgetOverview(){
+    const [data, setData] = useState<BudgetOverview[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const load = async () => {
+        setIsLoading(true);
+        try {
+            const result = await dashboardApi.getBudgetOverview();
+            setData(result);
+            setError(null);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Error desconocido');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+    }, []);
 
     return { data, isLoading, error, reload: load };
 }
