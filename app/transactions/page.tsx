@@ -1,7 +1,6 @@
 "use client"
 
 import { CategoryBreakdown } from "@/components/transactions/transaction-category-breakdown"
-import { TransactionDialogContainer } from "@/components/transactions/transaction-dialog-container"
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
 import { TransactionHeader } from "@/components/transactions/transaction-header"
 import { TransactionList } from "@/components/transactions/transaction-list"
@@ -39,9 +38,6 @@ export default function TransactionsPage() {
           </div>
         </div>
       </main>
-
-      {/* Dialog Container */}
-      <TransactionDialogContainer />
     </div>
   )
 }
