@@ -1,36 +1,66 @@
 "use client"
 
-import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Search, Filter, X } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { categoriesApi, type Category } from "@/services/categories-api"
+import type { TransactionFilters as ITransactionFilters } from "@/services/transactions-api"
+import { Search, X } from "lucide-react"
+import { useEffect, useState } from "react"
 
-export function TransactionFilters() {
+interface TransactionFiltersProps {
+  onFiltersChange: (filters: ITransactionFilters) => void
+}
+
+export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedType, setSelectedType] = useState("all")
   const [dateRange, setDateRange] = useState("all")
+  const [categories, setCategories] = useState<Category[]>([])
 
-  const categories = [
-    "Alimentación",
-    "Transporte",
-    "Entretenimiento",
-    "Servicios",
-    "Compras",
-    "Salud",
-    "Educación",
-    "Otros",
-  ]
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoriesApi.getCategories()
+        setCategories(data)
+      } catch (error) {
+        console.error("Error loading categories:", error)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  useEffect(() => {
+    const filters: ITransactionFilters = {}
+    
+    if (searchTerm) filters.search = searchTerm
+    if (selectedCategory !== "all") filters.category = selectedCategory
+    if (selectedType !== "all") filters.type = selectedType as "income" | "expense"
+    if (dateRange !== "all") filters.dateRange = dateRange
+
+    onFiltersChange(filters)
+  }, [searchTerm, selectedCategory, selectedType, dateRange, onFiltersChange])
 
   const activeFilters = [
-    selectedCategory !== "all" && { type: "category", value: selectedCategory },
-    selectedType !== "all" && { type: "type", value: selectedType },
-    dateRange !== "all" && { type: "date", value: dateRange },
-  ].filter(Boolean)
+    selectedCategory !== "all" && { type: "category", value: selectedCategory, label: selectedCategory },
+    selectedType !== "all" && { type: "type", value: selectedType, label: selectedType === "income" ? "Ingresos" : "Gastos" },
+    dateRange !== "all" && { type: "date", value: dateRange, label: getDateRangeLabel(dateRange) },
+  ].filter(Boolean) as Array<{ type: string; value: string; label: string }>
+
+  function getDateRangeLabel(range: string): string {
+    const labels: { [key: string]: string } = {
+      today: "Hoy",
+      week: "Esta semana",
+      month: "Este mes",
+      quarter: "Este trimestre",
+      year: "Este año",
+    }
+    return labels[range] || range
+  }
 
   const clearFilter = (filterType: string) => {
     switch (filterType) {
@@ -69,7 +99,7 @@ export function TransactionFilters() {
           </div>
 
           {/* Filter Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Categoría</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -79,8 +109,8 @@ export function TransactionFilters() {
                 <SelectContent>
                   <SelectItem value="all">Todas las categorías</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -117,26 +147,19 @@ export function TransactionFilters() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" className="w-full bg-transparent">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtros Avanzados
-              </Button>
-            </div>
           </div>
 
           {/* Active Filters */}
           {activeFilters.length > 0 && (
-            <div className="flex items-center space-x-2 flex-wrap">
+            <div className="flex items-center space-x-2 flex-wrap gap-2">
               <span className="text-sm text-muted-foreground">Filtros activos:</span>
               {activeFilters.map((filter, index) => (
                 <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                  <span>{filter.value}</span>
+                  <span>{filter.label}</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-auto p-0 ml-1"
+                    className="h-auto p-0 ml-1 hover:bg-transparent"
                     onClick={() => clearFilter(filter.type)}
                   >
                     <X className="w-3 h-3" />

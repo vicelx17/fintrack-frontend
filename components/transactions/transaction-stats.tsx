@@ -3,9 +3,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTransactions } from "@/hooks/use-transactions"
 import { ArrowUpDown, Calendar, TrendingDown, TrendingUp } from "lucide-react"
+import { useEffect } from "react"
 
-export function TransactionStats() {
-  const { transactionStats, loading } = useTransactions()
+interface TransactionStatsProps {
+  dateRange?: string
+}
+
+export function TransactionStats({ dateRange }: TransactionStatsProps) {
+  const { 
+    transactionStats, 
+    loading, 
+    loadTransactionStats 
+  } = useTransactions()
+
+  useEffect(() => {
+    loadTransactionStats(dateRange)
+  }, [dateRange])
 
   if (loading.stats.isLoading || !transactionStats) {
     return (
@@ -42,30 +55,30 @@ export function TransactionStats() {
     {
       title: "Total Transacciones",
       value: transactionStats.totalTransactions.toString(),
-      subtitle: "Este mes",
+      subtitle: "Período seleccionado",
       icon: ArrowUpDown,
       color: "text-primary",
     },
     {
       title: "Total Ingresos",
-      value: `€${transactionStats.totalIncome.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      value: `€${transactionStats.totalIncome.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       subtitle: "Período seleccionado",
       icon: TrendingUp,
-      color: "text-primary",
+      color: "text-green-600",
     },
     {
       title: "Total Gastos",
-      value: `€${transactionStats.totalExpenses.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      value: `€${transactionStats.totalExpenses.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       subtitle: "Período seleccionado",
       icon: TrendingDown,
-      color: "text-secondary",
+      color: "text-red-600",
     },
     {
       title: "Promedio Diario",
-      value: `€${transactionStats.averageDaily.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
+      value: `€${transactionStats.averageDaily.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       subtitle: "Balance neto",
       icon: Calendar,
-      color: "text-muted-foreground",
+      color: transactionStats.averageDaily >= 0 ? "text-green-600" : "text-red-600",
     },
   ]
 

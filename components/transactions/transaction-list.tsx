@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useToast } from "@/hooks/use-toast"
 import { useTransactions } from "@/hooks/use-transactions"
+import { transactionsApi, type TransactionFilters } from "@/services/transactions-api"
 import {
   ArrowUpRight, Car, Coffee,
   Copy,
@@ -13,9 +15,8 @@ import {
   Home, MoreHorizontal, ShoppingCart,
   Trash2
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { TransactionDialog } from "./transaction-dialog"
-
 
 const categoryIcons: { [key: string]: any } = {
   "Alimentación": ShoppingCart,
@@ -29,23 +30,88 @@ const getCategoryIcon = (category: string) => {
   return categoryIcons[category] || ShoppingCart
 }
 
-export function TransactionList() {
-  const [editingTransaction, setEditingTransaction] = useState(null)
+interface TransactionListProps {
+  filters?: TransactionFilters
+}
+
+export function TransactionList({ filters }: TransactionListProps) {
+  const [editingTransaction, setEditingTransaction] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const { toast } = useToast()
   
-  const { transactionList, loading } = useTransactions()
+  const { 
+    transactionList, 
+    loading, 
+    loadTransactions,
+    refreshTransactions 
+  } = useTransactions()
+
+  useEffect(() => {
+    loadTransactions(filters)
+  }, [filters])
 
   const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (transactionId: string) => {
-    console.log("Delete transaction:", transactionId)
+  const handleDelete = async (transactionId: string) => {
+    try {
+      const result = await transactionsApi.deleteTransaction(transactionId)
+      
+      if (result.success) {
+        toast({
+          title: "Éxito",
+          description: "Transacción eliminada correctamente",
+        })
+        refreshTransactions(filters)
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "No se pudo eliminar la transacción",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo eliminar la transacción",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleDuplicate = (transaction: any) => {
-    console.log("Duplicate transaction:", transaction)
+  const handleDuplicate = async (transaction: any) => {
+    try {
+      await transactionsApi.createTransaction({
+        type: transaction.type,
+        amount: Math.abs(transaction.amount),
+        description: `${transaction.description} (copia)`,
+        category_id: transaction.categoryId,
+        transaction_date: new Date().toISOString().split('T')[0],
+        notes: transaction.notes,
+      })
+      
+      toast({
+        title: "Éxito",
+        description: "Transacción duplicada correctamente",
+      })
+      refreshTransactions(filters)
+    } catch (error) {
+      console.error("Error duplicating transaction:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo duplicar la transacción",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDialogClose = () => {
+    setEditingTransaction(null)
+    setIsDialogOpen(false)
+    refreshTransactions(filters)
   }
 
   return (
@@ -138,10 +204,7 @@ export function TransactionList() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         transaction={editingTransaction}
-        onClose={() => {
-          setEditingTransaction(null)
-          setIsDialogOpen(false)
-        }}
+        onClose={handleDialogClose}
       />
     </>
   )

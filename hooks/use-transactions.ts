@@ -20,12 +20,10 @@ export function useTransactions(filters?: TransactionFilters) {
         transactions: LoadingState
         stats: LoadingState
         breakdown: LoadingState
-        complete: LoadingState
     }>({
         transactions: { isLoading: false, error: null },
         stats: { isLoading: false, error: null },
         breakdown: { isLoading: false, error: null },
-        complete: { isLoading: false, error: null },
     })
 
     const setLoading = (key: keyof typeof loadingStates, isLoading: boolean, error: string | null = null) => {
@@ -33,35 +31,6 @@ export function useTransactions(filters?: TransactionFilters) {
             ...prev,
             [key]: { isLoading, error }
         }))
-    }
-
-    const loadCompleteTransactions = async (appliedFilters?: TransactionFilters) => {
-        setLoading('complete', true)
-        try {
-            console.log('🚀 Cargando transactions completo...', appliedFilters)
-            const data = await transactionsApi.getCompleteTransactions(appliedFilters)
-            console.log('✅ Datos recibidos del backend:', data) 
-
-            setTransactionList(data.transactions)
-            setTransactionStats(data.stats)
-            setCategoryBreakdown(data.category_breakdown)
-
-            console.log('✅ Estados actualizados')
-            console.log('Transactions:', data.transactions.length)
-            console.log('Stats:', data.stats)
-            console.log('Breakdown:', data.category_breakdown.length)
-
-            setLoadingStates({
-                transactions: { isLoading: false, error: null },
-                stats: { isLoading: false, error: null },
-                breakdown: { isLoading: false, error: null },
-                complete: { isLoading: false, error: null },
-            })
-        } catch (error: any) {
-            const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-            console.error("Error loading complete transactions:", error)
-            setLoading('complete', false, errorMessage)
-        }
     }
 
     const loadTransactions = async (appliedFilters?: TransactionFilters) => {
@@ -100,10 +69,6 @@ export function useTransactions(filters?: TransactionFilters) {
         }
     }
 
-    const refreshAll = (appliedFilters?: TransactionFilters) => {
-        loadCompleteTransactions(appliedFilters)
-    }
-
     const refreshTransactions = (appliedFilters?: TransactionFilters) => {
         loadTransactions(appliedFilters)
     }
@@ -116,8 +81,11 @@ export function useTransactions(filters?: TransactionFilters) {
         loadCategoryBreakdown(dateRange)
     }
 
+    // Solo carga inicial si se pasan filtros
     useEffect(() => {
-        loadCompleteTransactions(filters)
+        if (filters) {
+            loadTransactions(filters)
+        }
     }, [])
 
     return {
@@ -125,22 +93,16 @@ export function useTransactions(filters?: TransactionFilters) {
         transactionStats,
         categoryBreakdown,
         
-        // Loading states
         loading: loadingStates,
 
-        // Load functions
-        loadCompleteTransactions,
         loadTransactions,
         loadTransactionStats,
         loadCategoryBreakdown,
 
-        // Refresh functions
-        refreshAll,
         refreshTransactions,
         refreshStats,
         refreshBreakdown,
 
-        // Helper states
         isAnyLoading: Object.values(loadingStates).some(state => state.isLoading),
         hasAnyError: Object.values(loadingStates).some(state => state.error !== null),
         allErrors: Object.values(loadingStates).map(state => state.error).filter(error => error !== null),

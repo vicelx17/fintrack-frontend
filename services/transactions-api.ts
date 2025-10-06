@@ -1,4 +1,3 @@
-// Transaction management utilities and API integration
 export interface Transaction {
   id: string
   userId: string
@@ -42,12 +41,6 @@ export interface CategoryBreakdown {
   amount: number
 }
 
-export interface ApiResponse<T> {
-  success: boolean
-  data: T
-  error?: string
-}
-
 const API_BASE_URL = "http://localhost:8000"
 
 function getAuthHeaders() {
@@ -81,25 +74,11 @@ export const transactionsApi = {
         })
       }
       
-      const response = await fetch(`${API_BASE_URL}/transactions?${queryParams.toString()}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      
-      if (Array.isArray(data)) {
-        return data
-      }
-      
-      if (data.transactions && Array.isArray(data.transactions)) {
-        return data.transactions
-      }
-      
-      return []
+      return await handleResponse<Transaction[]>(response)
       
     } catch (error) {
       console.error("Error fetching transactions:", error)
@@ -113,8 +92,7 @@ export const transactionsApi = {
       const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
         headers: getAuthHeaders(),
       })
-      const result = await handleResponse<ApiResponse<TransactionStats>>(response)
-      return result.data
+      return await handleResponse<TransactionStats>(response)
     } catch (error) {
       console.error("Error fetching transaction stats:", error)
       throw error
@@ -127,58 +105,23 @@ export const transactionsApi = {
       const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown${queryParams}`, {
         headers: getAuthHeaders(),
       })
-      const result = await handleResponse<ApiResponse<CategoryBreakdown[]>>(response)
-      return result.data
+      return await handleResponse<CategoryBreakdown[]>(response)
     } catch (error) {
       console.error("Error fetching category breakdown:", error)
       throw error
     }
   },
 
-  async getCompleteTransactions(filters?: TransactionFilters): Promise<{
-    transactions: Transaction[]
-    stats: TransactionStats
-    category_breakdown: CategoryBreakdown[]
-  }> {
-    try {
-      const queryParams = new URLSearchParams()
-
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== "") {
-            queryParams.append(key, value.toString())
-          }
-        })
-      }
-
-      const response = await fetch(`${API_BASE_URL}/transactions/complete?${queryParams.toString()}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      })
-      
-      const result = await handleResponse<ApiResponse<any>>(response)
-      return result.data
-    } catch (error) {
-      console.error("Error fetching complete transactions:", error)
-      throw error
-    }
-  },
-
-  async getTransactionById(id: string): Promise<Transaction | null> {
+  async getTransactionById(id: string): Promise<Transaction> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         headers: getAuthHeaders(),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.transaction || data
-      }
+      return await handleResponse<Transaction>(response)
     } catch (error) {
       console.error("Error fetching transaction:", error)
+      throw error
     }
-
-    return null
   },
 
   async createTransaction(transactionData: TransactionCreate): Promise<Transaction> {
@@ -188,47 +131,38 @@ export const transactionsApi = {
         headers: getAuthHeaders(),
         body: JSON.stringify(transactionData),
       })
-
-      const result = await handleResponse<Transaction>(response)
-      return result
+      return await handleResponse<Transaction>(response)
     } catch (error) {
       console.error("Error creating transaction:", error)
       throw error
     }
   },
 
-  async updateTransaction(id: string, transactionData: Partial<Transaction>): Promise<Transaction | null> {
+  async updateTransaction(id: string, transactionData: Partial<TransactionCreate>): Promise<Transaction> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(transactionData),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.transaction || data
-      }
+      return await handleResponse<Transaction>(response)
     } catch (error) {
       console.error("Error updating transaction:", error)
+      throw error
     }
-
-    return null
   },
 
-  async deleteTransaction(id: string): Promise<boolean> {
+  async deleteTransaction(id: string): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
-
-      return response.ok
+      return await handleResponse<{ success: boolean; message: string }>(response)
     } catch (error) {
       console.error("Error deleting transaction:", error)
+      throw error
     }
-
-    return false
   },
 }
 

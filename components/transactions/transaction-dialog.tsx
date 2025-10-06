@@ -72,9 +72,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
     }
   }, [open, toast])
 
-  // Filtrar categorías según el tipo seleccionado
-  const allCategories = categories
-
   useEffect(() => {
     if (transaction) {
       setFormData({
@@ -97,21 +94,11 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
     }
   }, [transaction, open])
 
-  // Limpiar categoría y cantidad seleccionada cuando cambia el tipo
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      categoryId: "",
-      amount: "",
-    }))
-  }, [formData.type])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      // Validar que se haya seleccionado una categoría
       if (!formData.categoryId) {
         toast({
           title: "Error",
@@ -122,9 +109,32 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
         return
       }
 
+      const amount = parseFloat(formData.amount)
+      
+      // Validar según el tipo
+      if (formData.type === "expense" && amount >= 0) {
+        toast({
+          title: "Error",
+          description: "Los gastos deben ser negativos",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      if (formData.type === "income" && amount <= 0) {
+        toast({
+          title: "Error",
+          description: "Los ingresos deben ser positivos",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
       const transactionData: TransactionCreate = {
         type: formData.type,
-        amount: parseFloat(formData.amount),
+        amount: amount,
         description: formData.description,
         category_id: parseInt(formData.categoryId),
         transaction_date: format(formData.date, "yyyy-MM-dd"),
@@ -138,7 +148,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
           description: "Transacción actualizada correctamente",
         })
       } else {
-        // Crear nueva transacción
         await transactionsApi.createTransaction(transactionData)
         toast({
           title: "Éxito",
@@ -203,23 +212,14 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                       id="amount"
                       type="number"
                       step="0.01"
-                      min="-9999999"
-                      max="-0.01"
-                      placeholder="-0.01"
+                      placeholder="-100.00"
                       value={formData.amount}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        if (
-                          value === "" ||
-                          (/^-?\d*\.?\d*$/.test(value) && parseFloat(value) < 0)
-                        ) {
-                          handleInputChange("amount", value)
-                        }
-                      }}
+                      onChange={(e) => handleInputChange("amount", e.target.value)}
                       className="pl-8"
                       required
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">Ingresa un número negativo</p>
                 </div>
 
                 <div className="space-y-2">
@@ -237,8 +237,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                         <div className="flex items-center justify-center p-4">
                           <Loader2 className="h-4 w-4 animate-spin" />
                         </div>
-                      ) : allCategories.length > 0 ? (
-                        allCategories.map((category) => (
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
@@ -264,22 +264,14 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                       id="amount"
                       type="number"
                       step="0.01"
-                      min="0.01"
-                      placeholder="0.01"
+                      placeholder="100.00"
                       value={formData.amount}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        if (
-                          value === "" ||
-                          (/^\d*\.?\d*$/.test(value) && parseFloat(value) > 0)
-                        ) {
-                          handleInputChange("amount", value)
-                        }
-                      }}
+                      onChange={(e) => handleInputChange("amount", e.target.value)}
                       className="pl-8"
                       required
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">Ingresa un número positivo</p>
                 </div>
 
                 <div className="space-y-2">
@@ -297,8 +289,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                         <div className="flex items-center justify-center p-4">
                           <Loader2 className="h-4 w-4 animate-spin" />
                         </div>
-                      ) : allCategories.length > 0 ? (
-                        allCategories.map((category) => (
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>

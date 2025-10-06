@@ -1,26 +1,47 @@
+"use client"
+
+import { CategoryBreakdown } from "@/components/transactions/transaction-category-breakdown"
+import { TransactionDialogContainer } from "@/components/transactions/transaction-dialog-container"
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
 import { TransactionHeader } from "@/components/transactions/transaction-header"
 import { TransactionList } from "@/components/transactions/transaction-list"
 import { TransactionStats } from "@/components/transactions/transaction-stats"
-import { TransactionProvider } from "@/contexts/transaction-context"
+import type { TransactionFilters as ITransactionFilters } from "@/services/transactions-api"
+import { useState } from "react"
 
 export default function TransactionsPage() {
+  const [filters, setFilters] = useState<ITransactionFilters>({})
+
+  const handleFiltersChange = (newFilters: ITransactionFilters) => {
+    setFilters(newFilters)
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <TransactionProvider>
-        <TransactionHeader />
+      <TransactionHeader />
+      
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Stats Section */}
+        <TransactionStats dateRange={filters.dateRange} />
 
-        <main className="container mx-auto px-4 py-6 space-y-6">
-          {/* Transaction Statistics */}
-          <TransactionStats />
+        {/* Filters Section */}
+        <TransactionFilters onFiltersChange={handleFiltersChange} />
 
-          {/* Filters and Search */}
-          <TransactionFilters />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Transactions List */}
+          <div className="lg:col-span-2">
+            <TransactionList filters={filters} />
+          </div>
 
-          {/* Transaction List */}
-          <TransactionList />
-        </main>
-      </TransactionProvider>
+          {/* Category Breakdown */}
+          <div className="lg:col-span-1">
+            <CategoryBreakdown dateRange={filters.dateRange} />
+          </div>
+        </div>
+      </main>
+
+      {/* Dialog Container */}
+      <TransactionDialogContainer />
     </div>
   )
 }
