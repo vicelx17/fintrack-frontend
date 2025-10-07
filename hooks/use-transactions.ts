@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { transactionEvents } from "../lib/transaction-events"
 import transactionsApi, {
     CategoryBreakdown,
     Transaction,
@@ -15,6 +16,7 @@ export function useTransactions(filters?: TransactionFilters) {
     const [transactionList, setTransactionList] = useState<Transaction[]>([])
     const [transactionStats, setTransactionStats] = useState<TransactionStats | null>(null)
     const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([])
+    const [currentFilters, setCurrentFilters] = useState<TransactionFilters | undefined>(filters)
 
     const [loadingStates, setLoadingStates] = useState<{
         transactions: LoadingState
@@ -42,6 +44,7 @@ export function useTransactions(filters?: TransactionFilters) {
         try {
             const data = await transactionsApi.getTransactions(appliedFilters)
             setTransactionList(data)
+            setCurrentFilters(appliedFilters)
             setLoading('transactions', false)
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
@@ -65,8 +68,6 @@ export function useTransactions(filters?: TransactionFilters) {
         setLoading('breakdown', true)
         try {
             const data = await transactionsApi.getCategoryBreakdown(dateRange)
-            console.log('Breakdown data received:', data) // 👈 Agregar esto
-            console.log('Is array?', Array.isArray(data)) // 👈 Y esto
             setCategoryBreakdown(data)
             setLoading('breakdown', false)
         } catch (error) {
@@ -76,8 +77,8 @@ export function useTransactions(filters?: TransactionFilters) {
     }, [setLoading])
 
     const refreshTransactions = useCallback((appliedFilters?: TransactionFilters) => {
-        loadTransactions(appliedFilters)
-    }, [loadTransactions])
+        loadTransactions(appliedFilters || currentFilters)
+    }, [loadTransactions, currentFilters])
 
     const refreshStats = useCallback((dateRange?: string) => {
         loadTransactionStats(dateRange)
@@ -86,6 +87,26 @@ export function useTransactions(filters?: TransactionFilters) {
     const refreshBreakdown = useCallback((dateRange?: string) => {
         loadCategoryBreakdown(dateRange)
     }, [loadCategoryBreakdown])
+
+    // Refrescar todo cuando hay cambios en transacciones
+    const refreshAll = useCallback(() => {
+        loadTransactions(currentFilters)
+        loadTransactionStats()
+        loadCategoryBreakdown()
+    }, [loadTransactions, loadTransactionStats, loadCategoryBreakdown, currentFilters])
+
+    // Suscribirse a eventos de transacciones
+    useEffect(() => {
+        const unsubscribeCreated = transactionEvents.subscribe('transaction-created', refreshAll)
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', refreshAll)
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', refreshAll)
+
+        return () => {
+            unsubscribeCreated()
+            unsubscribeUpdated()
+            unsubscribeDeleted()
+        }
+    }, [refreshAll])
 
     useEffect(() => {
         if (filters) {
@@ -107,6 +128,7 @@ export function useTransactions(filters?: TransactionFilters) {
         refreshTransactions,
         refreshStats,
         refreshBreakdown,
+        refreshAll,
 
         isAnyLoading: Object.values(loadingStates).some(state => state.isLoading),
         hasAnyError: Object.values(loadingStates).some(state => state.error !== null),

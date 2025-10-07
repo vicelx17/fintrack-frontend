@@ -3,7 +3,7 @@
 import { TransactionDialog } from "@/components/transactions/transaction-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useBudget } from "@/contexts/budget-context"
+import { useBudget } from "@/lib/budget-context"
 import { FileText, Plus, Target } from "lucide-react"
 import { useState } from "react"
 

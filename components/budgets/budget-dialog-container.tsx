@@ -1,6 +1,6 @@
 "use client"
 
-import { useBudget } from "@/contexts/budget-context"
+import { useBudget } from "@/lib/budget-context"
 import { BudgetDialog } from "./budget-dialog"
 
 export function BudgetDialogContainer() {

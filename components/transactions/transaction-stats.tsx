@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTransactions } from "@/hooks/use-transactions"
+import { transactionEvents } from "@/lib/transaction-events"
 import { ArrowUpDown, Calendar, TrendingDown, TrendingUp } from "lucide-react"
 import { useEffect } from "react"
 
@@ -18,6 +19,23 @@ export function TransactionStats({ dateRange }: TransactionStatsProps) {
 
   useEffect(() => {
     loadTransactionStats(dateRange)
+  }, [dateRange, loadTransactionStats])
+
+  // Suscribirse a cambios en transacciones
+  useEffect(() => {
+    const handleTransactionChange = () => {
+      loadTransactionStats(dateRange)
+    }
+
+    const unsubscribeCreated = transactionEvents.subscribe('transaction-created', handleTransactionChange)
+    const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', handleTransactionChange)
+    const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', handleTransactionChange)
+
+    return () => {
+      unsubscribeCreated()
+      unsubscribeUpdated()
+      unsubscribeDeleted()
+    }
   }, [dateRange, loadTransactionStats])
 
   if (loading.stats.isLoading) {

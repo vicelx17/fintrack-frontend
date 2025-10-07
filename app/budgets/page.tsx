@@ -3,7 +3,7 @@ import { BudgetHeader } from "@/components/budgets/budget-header"
 import { BudgetList } from "@/components/budgets/budget-list"
 import { BudgetOverview } from "@/components/budgets/budget-overview"
 import { CategoryManager } from "@/components/budgets/category-manager"
-import { BudgetProvider } from "@/contexts/budget-context"
+import { BudgetProvider } from "@/lib/budget-context"
 
 export default function BudgetsPage() {
   return (

@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { transactionEvents } from "@/lib/transaction-events"
 import { categoriesApi, type Category } from "@/services/categories-api"
 import { transactionsApi, type TransactionCreate } from "@/services/transactions-api"
 import { format } from "date-fns"
@@ -147,12 +148,16 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
           title: "Éxito",
           description: "Transacción actualizada correctamente",
         })
+        // Emitir evento de actualización
+        transactionEvents.emit('transaction-updated')
       } else {
         await transactionsApi.createTransaction(transactionData)
         toast({
           title: "Éxito",
           description: "Transacción creada correctamente",
         })
+        // Emitir evento de creación
+        transactionEvents.emit('transaction-created')
       }
 
       onOpenChange(false)
@@ -184,6 +189,17 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleAmountInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^\d.]/g, "") // Only allow numbers and dot
+    // Prevent multiple dots
+    value = value.replace(/^(\d*\.\d{0,2}).*$/, "$1")
+    if (formData.type === "expense") {
+      handleInputChange("amount", value ? `-${value}` : "")
+    } else {
+      handleInputChange("amount", value ? `${value}` : "")
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -207,19 +223,21 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                 <div className="space-y-2">
                   <Label htmlFor="amount">Cantidad *</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-3 text-muted-foreground">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground text-sm">
+                      €<span className="ml-0.5">{formData.type === "expense" ? "-" : "+"}</span>
+                    </span>
                     <Input
                       id="amount"
-                      type="number"
-                      step="0.01"
-                      placeholder="-100.00"
-                      value={formData.amount}
-                      onChange={(e) => handleInputChange("amount", e.target.value)}
-                      className="pl-8"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="100.00"
+                      value={formData.type === "expense" ? formData.amount.replace("-", "") : formData.amount}
+                      onChange={handleAmountInput}
+                      className="pl-11"
                       required
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Ingresa un número negativo</p>
+                  <p className="text-xs text-muted-foreground">El signo negativo es fijo para gastos</p>
                 </div>
 
                 <div className="space-y-2">
@@ -259,19 +277,21 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
                 <div className="space-y-2">
                   <Label htmlFor="amount">Cantidad *</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-3 text-muted-foreground">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground text-sm">
+                      €<span className="ml-0.5">{formData.type === "expense" ? "-" : "+"}</span>
+                    </span>
                     <Input
                       id="amount"
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="100.00"
-                      value={formData.amount}
-                      onChange={(e) => handleInputChange("amount", e.target.value)}
-                      className="pl-8"
+                      value={formData.type === "expense" ? formData.amount.replace("-", "") : formData.amount}
+                      onChange={handleAmountInput}
+                      className="pl-11"
                       required
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Ingresa un número positivo</p>
+                  <p className="text-xs text-muted-foreground">El signo positivo es fijo para ingresos</p>
                 </div>
 
                 <div className="space-y-2">

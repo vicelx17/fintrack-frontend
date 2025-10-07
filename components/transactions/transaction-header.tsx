@@ -1,11 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Download, Plus, Upload } from "lucide-react"
+import { Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { TransactionDialog } from "./transaction-dialog"
 
 export function TransactionHeader() {
+  const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   return (
@@ -19,14 +21,9 @@ export function TransactionHeader() {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
-                <Upload className="w-4 h-4 mr-2" />
-                Importar
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Exportar
-              </Button>
+               <Button variant="outline" onClick={() => router.push("/dashboard")}>
+              Volver al Dashboard
+            </Button>
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nueva Transacción
@@ -39,7 +36,9 @@ export function TransactionHeader() {
       <TransactionDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={() => {
+          setIsDialogOpen(false);
+        }}
       />
     </>
   )

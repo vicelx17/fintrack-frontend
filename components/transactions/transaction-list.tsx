@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { useTransactions } from "@/hooks/use-transactions"
+import { transactionEvents } from "@/lib/transaction-events"
 import { transactionsApi, type TransactionFilters } from "@/services/transactions-api"
 import {
   BriefcaseBusiness, BusFront, ChefHat, Coffee,
@@ -68,7 +69,8 @@ export function TransactionList({ filters }: TransactionListProps) {
           title: "Éxito",
           description: "Transacción eliminada correctamente",
         })
-        refreshTransactions(filters)
+        // Emitir evento de eliminación
+        transactionEvents.emit('transaction-deleted')
       } else {
         toast({
           title: "Error",
@@ -88,7 +90,7 @@ export function TransactionList({ filters }: TransactionListProps) {
 
   const handleDialogClose = () => {
     setIsDialogOpen(false)
-    refreshTransactions(filters)
+    setEditingTransaction(null)
   }
 
   return (

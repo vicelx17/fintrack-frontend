@@ -8,7 +8,7 @@ import { ExpenseChart } from "@/components/dashboard/expense-chart"
 import { FinancialSummary } from "@/components/dashboard/financial-summary"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
-import { BudgetProvider } from "@/contexts/budget-context"
+import { BudgetProvider } from "@/lib/budget-context"
 
 export default function DashboardPage() {
   return (
