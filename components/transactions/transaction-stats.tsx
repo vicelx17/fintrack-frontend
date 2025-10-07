@@ -18,9 +18,9 @@ export function TransactionStats({ dateRange }: TransactionStatsProps) {
 
   useEffect(() => {
     loadTransactionStats(dateRange)
-  }, [dateRange])
+  }, [dateRange, loadTransactionStats])
 
-  if (loading.stats.isLoading || !transactionStats) {
+  if (loading.stats.isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
@@ -51,34 +51,60 @@ export function TransactionStats({ dateRange }: TransactionStatsProps) {
     )
   }
 
+  // Validación adicional para asegurar que todos los datos existen
+  if (!transactionStats || 
+      transactionStats.totalTransactions === undefined ||
+      transactionStats.totalIncome === undefined ||
+      transactionStats.totalExpenses === undefined ||
+      transactionStats.averageDaily === undefined) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="col-span-full">
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground">No hay estadísticas disponibles</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const stats = [
     {
       title: "Total Transacciones",
-      value: transactionStats.totalTransactions.toString(),
+      value: (transactionStats.totalTransactions ?? 0).toString(),
       subtitle: "Período seleccionado",
       icon: ArrowUpDown,
       color: "text-primary",
     },
     {
       title: "Total Ingresos",
-      value: `€${transactionStats.totalIncome.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `€${(transactionStats.totalIncome ?? 0).toLocaleString('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      })}`,
       subtitle: "Período seleccionado",
       icon: TrendingUp,
       color: "text-green-600",
     },
     {
       title: "Total Gastos",
-      value: `€${transactionStats.totalExpenses.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `€${(transactionStats.totalExpenses ?? 0).toLocaleString('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      })}`,
       subtitle: "Período seleccionado",
       icon: TrendingDown,
       color: "text-red-600",
     },
     {
       title: "Promedio Diario",
-      value: `€${transactionStats.averageDaily.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `€${(transactionStats.averageDaily ?? 0).toLocaleString('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      })}`,
       subtitle: "Balance neto",
       icon: Calendar,
-      color: transactionStats.averageDaily >= 0 ? "text-green-600" : "text-red-600",
+      color: (transactionStats.averageDaily ?? 0) >= 0 ? "text-green-600" : "text-red-600",
     },
   ]
 

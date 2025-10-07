@@ -9,21 +9,25 @@ import { useToast } from "@/hooks/use-toast"
 import { useTransactions } from "@/hooks/use-transactions"
 import { transactionsApi, type TransactionFilters } from "@/services/transactions-api"
 import {
-  ArrowUpRight, Car, Coffee,
-  Copy,
+  BriefcaseBusiness, BusFront, ChefHat, Coffee,
   Edit,
-  Home, MoreHorizontal, ShoppingCart,
-  Trash2
+  MoreHorizontal, PlaneTakeoff, ReceiptEuro, ShoppingCart,
+  Trash2,
+  Wallet
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { TransactionDialog } from "./transaction-dialog"
 
+// Mapeo de categorías a iconos
 const categoryIcons: { [key: string]: any } = {
-  "Alimentación": ShoppingCart,
-  "Transporte": Car,
-  "Vivienda": Home,
-  "Entretenimiento": Coffee,
-  "Ingresos": ArrowUpRight,
+  "Alimentación": ChefHat,
+  "Facturas": ReceiptEuro,
+  "Suscripciones": Wallet,
+  "Transporte": BusFront,
+  "Viajes": PlaneTakeoff,
+  "Ocio": Coffee,
+  "Trabajo": BriefcaseBusiness,
+  "Otros": ShoppingCart
 }
 
 const getCategoryIcon = (category: string) => {
@@ -82,34 +86,7 @@ export function TransactionList({ filters }: TransactionListProps) {
     }
   }
 
-  const handleDuplicate = async (transaction: any) => {
-    try {
-      await transactionsApi.createTransaction({
-        type: transaction.type,
-        amount: Math.abs(transaction.amount),
-        description: `${transaction.description} (copia)`,
-        category_id: transaction.categoryId,
-        transaction_date: new Date().toISOString().split('T')[0],
-        notes: transaction.notes,
-      })
-      
-      toast({
-        title: "Éxito",
-        description: "Transacción duplicada correctamente",
-      })
-      refreshTransactions(filters)
-    } catch (error) {
-      console.error("Error duplicating transaction:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo duplicar la transacción",
-        variant: "destructive",
-      })
-    }
-  }
-
   const handleDialogClose = () => {
-    setEditingTransaction(null)
     setIsDialogOpen(false)
     refreshTransactions(filters)
   }
@@ -148,6 +125,7 @@ export function TransactionList({ filters }: TransactionListProps) {
                 {transactionList.map((transaction) => {
                   const Icon = getCategoryIcon(transaction.category)
                   const isIncome = transaction.type === "income"
+                  const isExpense = transaction.type === "expense"
 
                   return (
                     <TableRow key={transaction.id}>
@@ -156,8 +134,8 @@ export function TransactionList({ filters }: TransactionListProps) {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-lg ${isIncome ? "bg-green-100" : "bg-red-100"}`}>
-                            <Icon className={`w-4 h-4 ${isIncome ? "text-green-600" : "text-red-600"}`} />
+                          <div className={`p-2 rounded-lg ${isIncome ? "bg-primary/10" : isExpense ? "bg-destructive/10" : "bg-muted"}`}>
+                            <Icon className={`w-4 h-4 ${isIncome ? "text-primary" : isExpense ? "text-destructive" : "text-foreground"}`} />
                           </div>
                           <span>{transaction.description}</span>
                         </div>
@@ -165,8 +143,15 @@ export function TransactionList({ filters }: TransactionListProps) {
                       <TableCell>
                         <Badge variant="outline">{transaction.category}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}>
-                        {isIncome ? "+" : "-"}€{Math.abs(transaction.amount).toFixed(2)}
+                      <TableCell className={`text-right font-semibold ${
+                        isIncome
+                          ? "text-primary"
+                          : isExpense
+                          ? "text-destructive"
+                          : "text-foreground"
+                      }`}>
+                        {isIncome ? "+" : isExpense ? "-" : ""}
+                        €{Math.abs(transaction.amount).toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -179,10 +164,6 @@ export function TransactionList({ filters }: TransactionListProps) {
                             <DropdownMenuItem onClick={() => handleEdit(transaction)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(transaction)}>
-                              <Copy className="mr-2 h-4 w-4" />
-                              Duplicar
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(transaction.id)} className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />

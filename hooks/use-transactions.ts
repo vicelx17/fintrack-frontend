@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import transactionsApi, {
     CategoryBreakdown,
     Transaction,
@@ -26,14 +26,18 @@ export function useTransactions(filters?: TransactionFilters) {
         breakdown: { isLoading: false, error: null },
     })
 
-    const setLoading = (key: keyof typeof loadingStates, isLoading: boolean, error: string | null = null) => {
+    const setLoading = useCallback((
+        key: keyof typeof loadingStates,
+        isLoading: boolean,
+        error: string | null = null
+    ) => {
         setLoadingStates(prev => ({
             ...prev,
             [key]: { isLoading, error }
         }))
-    }
+    }, [])
 
-    const loadTransactions = async (appliedFilters?: TransactionFilters) => {
+    const loadTransactions = useCallback(async (appliedFilters?: TransactionFilters) => {
         setLoading('transactions', true)
         try {
             const data = await transactionsApi.getTransactions(appliedFilters)
@@ -43,9 +47,9 @@ export function useTransactions(filters?: TransactionFilters) {
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
             setLoading('transactions', false, errorMessage)
         }
-    }
+    }, [setLoading])
 
-    const loadTransactionStats = async (dateRange?: string) => {
+    const loadTransactionStats = useCallback(async (dateRange?: string) => {
         setLoading('stats', true)
         try {
             const data = await transactionsApi.getTransactionStats(dateRange)
@@ -55,44 +59,45 @@ export function useTransactions(filters?: TransactionFilters) {
             const errorMessage = error instanceof Error ? error.message : 'Error cargando estadísticas'
             setLoading('stats', false, errorMessage)
         }
-    }
+    }, [setLoading])
 
-    const loadCategoryBreakdown = async (dateRange?: string) => {
+    const loadCategoryBreakdown = useCallback(async (dateRange?: string) => {
         setLoading('breakdown', true)
         try {
             const data = await transactionsApi.getCategoryBreakdown(dateRange)
+            console.log('Breakdown data received:', data) // 👈 Agregar esto
+            console.log('Is array?', Array.isArray(data)) // 👈 Y esto
             setCategoryBreakdown(data)
             setLoading('breakdown', false)
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Error cargando desglose por categoría'
             setLoading('breakdown', false, errorMessage)
         }
-    }
+    }, [setLoading])
 
-    const refreshTransactions = (appliedFilters?: TransactionFilters) => {
+    const refreshTransactions = useCallback((appliedFilters?: TransactionFilters) => {
         loadTransactions(appliedFilters)
-    }
+    }, [loadTransactions])
 
-    const refreshStats = (dateRange?: string) => {
+    const refreshStats = useCallback((dateRange?: string) => {
         loadTransactionStats(dateRange)
-    }
+    }, [loadTransactionStats])
 
-    const refreshBreakdown = (dateRange?: string) => {
+    const refreshBreakdown = useCallback((dateRange?: string) => {
         loadCategoryBreakdown(dateRange)
-    }
+    }, [loadCategoryBreakdown])
 
-    // Solo carga inicial si se pasan filtros
     useEffect(() => {
         if (filters) {
             loadTransactions(filters)
         }
-    }, [])
+    }, []) 
 
     return {
         transactionList,
         transactionStats,
         categoryBreakdown,
-        
+
         loading: loadingStates,
 
         loadTransactions,

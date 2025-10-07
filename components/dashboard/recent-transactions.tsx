@@ -2,19 +2,22 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRecentTransactions } from "@/hooks/use-dashboard"
-import { ArrowUpRight, Car, Coffee, Home, MoreHorizontal, ShoppingCart } from "lucide-react"
+import { BriefcaseBusiness, BusFront, ChefHat, Coffee, MoreHorizontal, PlaneTakeoff, ReceiptEuro, ShoppingCart, Wallet } from "lucide-react"
 
 // Mapeo de categorías a iconos
 const categoryIcons: { [key: string]: any } = {
-  "Alimentación": ShoppingCart,
-  "Transporte": Car,
-  "Vivienda": Home,
-  "Entretenimiento": Coffee,
-  "Ingresos": ArrowUpRight,
+  "Alimentación": ChefHat,
+  "Facturas": ReceiptEuro,
+  "Suscripciones": Wallet,
+  "Transporte": BusFront,
+  "Viajes": PlaneTakeoff,
+  "Ocio": Coffee,
+  "Trabajo": BriefcaseBusiness,
+  "Otros": ShoppingCart
 }
 
 const getCategoryIcon = (category: string) => {
-  return categoryIcons[category] || ShoppingCart
+  return categoryIcons[category] || ReceiptEuro 
 }
 
 export function RecentTransactions() {

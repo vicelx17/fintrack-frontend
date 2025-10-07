@@ -39,6 +39,7 @@ export interface TransactionStats {
 export interface CategoryBreakdown {
   category: string
   amount: number
+  type: "income" | "expense"
 }
 
 const API_BASE_URL = "http://localhost:8000"

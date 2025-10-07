@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categoriesApi, type Category } from "@/services/categories-api"
 import type { TransactionFilters as ITransactionFilters } from "@/services/transactions-api"
 import { Search, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface TransactionFiltersProps {
   onFiltersChange: (filters: ITransactionFilters) => void
@@ -21,6 +21,13 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
   const [selectedType, setSelectedType] = useState("all")
   const [dateRange, setDateRange] = useState("all")
   const [categories, setCategories] = useState<Category[]>([])
+
+  // Usar useRef para mantener referencia estable de onFiltersChange
+  const onFiltersChangeRef = useRef(onFiltersChange)
+  
+  useEffect(() => {
+    onFiltersChangeRef.current = onFiltersChange
+  }, [onFiltersChange])
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -34,6 +41,7 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
     loadCategories()
   }, [])
 
+  // Aplicar filtros
   useEffect(() => {
     const filters: ITransactionFilters = {}
     
@@ -42,8 +50,8 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
     if (selectedType !== "all") filters.type = selectedType as "income" | "expense"
     if (dateRange !== "all") filters.dateRange = dateRange
 
-    onFiltersChange(filters)
-  }, [searchTerm, selectedCategory, selectedType, dateRange, onFiltersChange])
+    onFiltersChangeRef.current(filters)
+  }, [searchTerm, selectedCategory, selectedType, dateRange])
 
   const activeFilters = [
     selectedCategory !== "all" && { type: "category", value: selectedCategory, label: selectedCategory },
@@ -62,7 +70,7 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
     return labels[range] || range
   }
 
-  const clearFilter = (filterType: string) => {
+  const clearFilter = useCallback((filterType: string) => {
     switch (filterType) {
       case "category":
         setSelectedCategory("all")
@@ -74,14 +82,14 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
         setDateRange("all")
         break
     }
-  }
+  }, [])
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSearchTerm("")
     setSelectedCategory("all")
     setSelectedType("all")
     setDateRange("all")
-  }
+  }, [])
 
   return (
     <Card>

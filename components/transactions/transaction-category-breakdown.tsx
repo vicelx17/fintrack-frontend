@@ -17,7 +17,7 @@ export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
 
   useEffect(() => {
     loadCategoryBreakdown(dateRange)
-  }, [dateRange])
+  }, [dateRange, loadCategoryBreakdown])
 
   if (loading.breakdown.isLoading) {
     return (
@@ -57,7 +57,7 @@ export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
     )
   }
 
-  if (!categoryBreakdown || categoryBreakdown.length === 0) {
+  if (!categoryBreakdown || !Array.isArray(categoryBreakdown) || categoryBreakdown.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -72,7 +72,10 @@ export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
     )
   }
 
-  const totalAmount = categoryBreakdown.reduce((sum, item) => sum + item.amount, 0)
+  const totalAmount = categoryBreakdown.reduce((sum, item) => {
+    const amount = typeof item?.amount === 'number' ? item.amount : 0
+    return sum + amount
+  }, 0)
 
   return (
     <Card>
@@ -82,20 +85,38 @@ export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
       <CardContent>
         <div className="space-y-4">
           {categoryBreakdown.map((item, index) => {
-            const percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0
+            if (!item || !item.category) return null
+
+            const amount = typeof item.amount === 'number' ? item.amount : 0
+            const percentage = totalAmount > 0 ? (Math.abs(amount) / Math.abs(totalAmount)) * 100 : 0
+            const isIncome = item.type === "income"
+            const isExpense = item.type === "expense"
 
             return (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{item.category}</span>
-                  <span className="text-sm font-semibold">
-                    €{item.amount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span className={`text-sm font-semibold ${
+                    isIncome
+                      ? "text-primary"
+                      : isExpense
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}>
+                    {isIncome ? "+" : isExpense ? "-" : ""}
+                    €{Math.abs(amount).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full transition-all duration-300"
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        isIncome
+                          ? "bg-primary"
+                          : isExpense
+                          ? "bg-destructive"
+                          : "bg-primary"
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
