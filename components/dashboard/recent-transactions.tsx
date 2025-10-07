@@ -76,13 +76,34 @@ export function RecentTransactions() {
                 return (
                   <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${isIncome ? "bg-primary/10" : "bg-secondary/10"}`}>
-                        <Icon className={`w-4 h-4 ${isIncome ? "text-primary" : "text-secondary"}`} />
+                      <div className={`p-2 rounded-lg ${
+                        isIncome
+                          ? "bg-primary/10"
+                          : isExpense
+                          ? "bg-destructive/10"
+                          : "bg-muted"
+                      }`}>
+                        <Icon className={`w-4 h-4 ${
+                          isIncome
+                            ? "text-primary"
+                            : isExpense
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`} />
                       </div>
                       <div>
                         <p className="font-medium">{transaction.description}</p>
                         <div className="flex items-center space-x-2">
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs border-2 ${
+                              isIncome
+                                ? "border-primary"
+                                : isExpense
+                                ? "border-destructive"
+                                : ""
+                            }`}
+                          >
                             {transaction.category}
                           </Badge>
                           <span className="text-xs text-muted-foreground">

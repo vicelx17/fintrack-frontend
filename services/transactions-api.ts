@@ -74,25 +74,34 @@ export const transactionsApi = {
           }
         })
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/transactions/?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
 
       return await handleResponse<Transaction[]>(response)
-      
+
     } catch (error) {
       console.error("Error fetching transactions:", error)
       throw error
     }
   },
 
-  async getTransactionStats(dateRange?: string): Promise<TransactionStats> {
+  async getTransactionStats(filters?: TransactionFilters): Promise<TransactionStats> {
     try {
-      const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
-      const response = await fetch(`${API_BASE_URL}/transactions/stats${queryParams}`, {
+      const queryParams = new URLSearchParams()
+
+      if (filters) {
+        if (filters.dateRange) queryParams.append('dateRange', filters.dateRange)
+        if (filters.category) queryParams.append('category', filters.category)
+        if (filters.type) queryParams.append('type', filters.type)
+      }
+
+      const response = await fetch(`${API_BASE_URL}/transactions/stats?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
+      const url = `${API_BASE_URL}/transactions/stats?${queryParams.toString()}`
+      console.log('📊 Stats URL:', url)
       return await handleResponse<TransactionStats>(response)
     } catch (error) {
       console.error("Error fetching transaction stats:", error)
@@ -100,18 +109,25 @@ export const transactionsApi = {
     }
   },
 
-  async getCategoryBreakdown(dateRange?: string): Promise<CategoryBreakdown[]> {
-    try {
-      const queryParams = dateRange ? `?dateRange=${dateRange}` : ""
-      const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown${queryParams}`, {
-        headers: getAuthHeaders(),
-      })
-      return await handleResponse<CategoryBreakdown[]>(response)
-    } catch (error) {
-      console.error("Error fetching category breakdown:", error)
-      throw error
+  async getCategoryBreakdown(filters?: TransactionFilters): Promise<CategoryBreakdown[]> {
+  try {
+    const queryParams = new URLSearchParams()
+    
+    if (filters) {
+      if (filters.dateRange) queryParams.append('dateRange', filters.dateRange)
+      if (filters.category) queryParams.append('category', filters.category)
+      if (filters.type) queryParams.append('type', filters.type)
     }
-  },
+    
+    const response = await fetch(`${API_BASE_URL}/transactions/category-breakdown?${queryParams.toString()}`, {
+      headers: getAuthHeaders(),
+    })
+    return await handleResponse<CategoryBreakdown[]>(response)
+  } catch (error) {
+    console.error("Error fetching category breakdown:", error)
+    throw error
+  }
+},
 
   async getTransactionById(id: string): Promise<Transaction> {
     try {

@@ -2,13 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTransactions } from "@/hooks/use-transactions"
+import { TransactionFilters } from "@/services/transactions-api"
 import { useEffect } from "react"
 
 interface CategoryBreakdownProps {
-  dateRange?: string
+  filters?: TransactionFilters
 }
 
-export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ filters }: CategoryBreakdownProps) {
   const { 
     categoryBreakdown, 
     loading, 
@@ -16,8 +17,8 @@ export function CategoryBreakdown({ dateRange }: CategoryBreakdownProps) {
   } = useTransactions()
 
   useEffect(() => {
-    loadCategoryBreakdown(dateRange)
-  }, [dateRange, loadCategoryBreakdown])
+    loadCategoryBreakdown(filters)
+  }, [filters?.dateRange, filters?.category, filters?.type, loadCategoryBreakdown])
 
   if (loading.breakdown.isLoading) {
     return (

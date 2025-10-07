@@ -21,7 +21,7 @@ export default function TransactionsPage() {
       
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Stats Section */}
-        <TransactionStats dateRange={filters.dateRange} />
+        <TransactionStats filters={filters} />
 
         {/* Filters Section */}
         <TransactionFilters onFiltersChange={handleFiltersChange} />
@@ -34,7 +34,7 @@ export default function TransactionsPage() {
 
           {/* Category Breakdown */}
           <div className="lg:col-span-1">
-            <CategoryBreakdown dateRange={filters.dateRange} />
+            <CategoryBreakdown filters={filters} />
           </div>
         </div>
       </main>

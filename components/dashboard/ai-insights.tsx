@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAIInsights } from "@/hooks/use-ai"
-import { AlertTriangle, Brain, ChevronRight, Lightbulb, RefreshCw } from "lucide-react"
+import { AlertTriangle, Brain, Lightbulb, RefreshCw } from "lucide-react"
 
 const iconMap: { [key: string]: any } = {
   brain: Brain,
@@ -94,9 +94,6 @@ export function AIInsights() {
                         <IconComponent className={`w-4 h-4 ${colorClass} flex-shrink-0`} />
                         <span className="font-medium text-sm">{insight.title}</span>
                       </div>
-                      <Badge variant={badgeVariant} className="text-xs">
-                        {insight.confidence}
-                      </Badge>
                     </div>
                     
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -117,15 +114,6 @@ export function AIInsights() {
                         )}
                       </div>
                     )}
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-between p-2 h-auto"
-                    >
-                      <span className="text-xs">Ver detalles</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </Button>
                   </div>
                 )
               })

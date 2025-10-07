@@ -3,14 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTransactions } from "@/hooks/use-transactions"
 import { transactionEvents } from "@/lib/transaction-events"
+import { TransactionFilters } from "@/services/transactions-api"
 import { ArrowUpDown, Calendar, TrendingDown, TrendingUp } from "lucide-react"
 import { useEffect } from "react"
 
 interface TransactionStatsProps {
-  dateRange?: string
+  filters?: TransactionFilters
 }
 
-export function TransactionStats({ dateRange }: TransactionStatsProps) {
+export function TransactionStats({ filters }: TransactionStatsProps) {
   const { 
     transactionStats, 
     loading, 
@@ -18,25 +19,25 @@ export function TransactionStats({ dateRange }: TransactionStatsProps) {
   } = useTransactions()
 
   useEffect(() => {
-    loadTransactionStats(dateRange)
-  }, [dateRange, loadTransactionStats])
+  loadTransactionStats(filters)
+}, [filters?.dateRange, filters?.category, filters?.type, loadTransactionStats])
 
-  // Suscribirse a cambios en transacciones
-  useEffect(() => {
-    const handleTransactionChange = () => {
-      loadTransactionStats(dateRange)
-    }
+// Y en el segundo useEffect también:
+useEffect(() => {
+  const handleTransactionChange = () => {
+    loadTransactionStats(filters)
+  }
 
-    const unsubscribeCreated = transactionEvents.subscribe('transaction-created', handleTransactionChange)
-    const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', handleTransactionChange)
-    const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', handleTransactionChange)
+  const unsubscribeCreated = transactionEvents.subscribe('transaction-created', handleTransactionChange)
+  const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', handleTransactionChange)
+  const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', handleTransactionChange)
 
-    return () => {
-      unsubscribeCreated()
-      unsubscribeUpdated()
-      unsubscribeDeleted()
-    }
-  }, [dateRange, loadTransactionStats])
+  return () => {
+    unsubscribeCreated()
+    unsubscribeUpdated()
+    unsubscribeDeleted()
+  }
+}, [filters?.dateRange, filters?.category, filters?.type, loadTransactionStats])
 
   if (loading.stats.isLoading) {
     return (

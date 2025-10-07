@@ -52,10 +52,10 @@ export function useTransactions(filters?: TransactionFilters) {
         }
     }, [setLoading])
 
-    const loadTransactionStats = useCallback(async (dateRange?: string) => {
+    const loadTransactionStats = useCallback(async (appliedFilters?: TransactionFilters) => {
         setLoading('stats', true)
         try {
-            const data = await transactionsApi.getTransactionStats(dateRange)
+            const data = await transactionsApi.getTransactionStats(appliedFilters)
             setTransactionStats(data)
             setLoading('stats', false)
         } catch (error) {
@@ -64,35 +64,35 @@ export function useTransactions(filters?: TransactionFilters) {
         }
     }, [setLoading])
 
-    const loadCategoryBreakdown = useCallback(async (dateRange?: string) => {
-        setLoading('breakdown', true)
-        try {
-            const data = await transactionsApi.getCategoryBreakdown(dateRange)
-            setCategoryBreakdown(data)
-            setLoading('breakdown', false)
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Error cargando desglose por categoría'
-            setLoading('breakdown', false, errorMessage)
-        }
-    }, [setLoading])
+    const loadCategoryBreakdown = useCallback(async (appliedFilters?: TransactionFilters) => {
+  setLoading('breakdown', true)
+  try {
+    const data = await transactionsApi.getCategoryBreakdown(appliedFilters) 
+    setCategoryBreakdown(data)
+    setLoading('breakdown', false)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Error cargando desglose por categoría'
+    setLoading('breakdown', false, errorMessage)
+  }
+}, [setLoading])
 
     const refreshTransactions = useCallback((appliedFilters?: TransactionFilters) => {
         loadTransactions(appliedFilters || currentFilters)
     }, [loadTransactions, currentFilters])
 
-    const refreshStats = useCallback((dateRange?: string) => {
-        loadTransactionStats(dateRange)
-    }, [loadTransactionStats])
+    const refreshStats = useCallback((appliedFilters?: TransactionFilters) => {
+        loadTransactionStats(appliedFilters || currentFilters)
+    }, [loadTransactionStats, currentFilters])
 
-    const refreshBreakdown = useCallback((dateRange?: string) => {
-        loadCategoryBreakdown(dateRange)
-    }, [loadCategoryBreakdown])
+    const refreshBreakdown = useCallback((appliedFilters?: TransactionFilters) => {
+        loadCategoryBreakdown(appliedFilters || currentFilters)
+    }, [loadCategoryBreakdown, currentFilters])
 
     // Refrescar todo cuando hay cambios en transacciones
     const refreshAll = useCallback(() => {
         loadTransactions(currentFilters)
-        loadTransactionStats()
-        loadCategoryBreakdown()
+        loadTransactionStats(currentFilters)
+        loadCategoryBreakdown(currentFilters)
     }, [loadTransactions, loadTransactionStats, loadCategoryBreakdown, currentFilters])
 
     // Suscribirse a eventos de transacciones
@@ -112,7 +112,7 @@ export function useTransactions(filters?: TransactionFilters) {
         if (filters) {
             loadTransactions(filters)
         }
-    }, []) 
+    }, [])
 
     return {
         transactionList,
