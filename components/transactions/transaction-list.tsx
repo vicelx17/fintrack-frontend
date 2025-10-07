@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
@@ -42,6 +43,8 @@ interface TransactionListProps {
 export function TransactionList({ filters }: TransactionListProps) {
   const [editingTransaction, setEditingTransaction] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
   
   const { 
@@ -60,17 +63,18 @@ export function TransactionList({ filters }: TransactionListProps) {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (transactionId: string) => {
+  const handleDelete = async () => {
+    if (!deleteId) return
+    setIsDeleting(true)
     try {
-      const result = await transactionsApi.deleteTransaction(transactionId)
-      
+      const result = await transactionsApi.deleteTransaction(deleteId)
       if (result.success) {
         toast({
           title: "Éxito",
           description: "Transacción eliminada correctamente",
         })
-        // Emitir evento de eliminación
         transactionEvents.emit('transaction-deleted')
+        refreshTransactions()
       } else {
         toast({
           title: "Error",
@@ -85,6 +89,9 @@ export function TransactionList({ filters }: TransactionListProps) {
         description: error instanceof Error ? error.message : "No se pudo eliminar la transacción",
         variant: "destructive",
       })
+    } finally {
+      setIsDeleting(false)
+      setDeleteId(null)
     }
   }
 
@@ -167,7 +174,7 @@ export function TransactionList({ filters }: TransactionListProps) {
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(transaction.id)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => setDeleteId(transaction.id)} className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar
                             </DropdownMenuItem>
@@ -189,6 +196,26 @@ export function TransactionList({ filters }: TransactionListProps) {
         transaction={editingTransaction}
         onClose={handleDialogClose}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar transacción?</DialogTitle>
+          </DialogHeader>
+          <div>
+            ¿Estás seguro de que deseas eliminar esta transacción? Esta acción no se puede deshacer.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

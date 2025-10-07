@@ -128,6 +128,10 @@ export function useDashboard(){
     };
 }
 
+import { transactionEvents } from '@/lib/transaction-events'; // Añade este import
+
+// Dentro de cada hook personalizado, añade la suscripción:
+
 export function useFinancialSummary(){
     const [data, setData] = useState<FinancialSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -148,6 +152,16 @@ export function useFinancialSummary(){
 
     useEffect(() => {
         load();
+        
+        const unsubscribeCreated = transactionEvents.subscribe('transaction-created', load);
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', load);
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', load);
+
+        return () => {
+            unsubscribeCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
     }, []);
 
     return { data, isLoading, error, reload: load };
@@ -173,6 +187,16 @@ export function useMonthlyData(months: number = 6){
 
     useEffect(() => {
         load();
+        
+        const unsubscribeCreated = transactionEvents.subscribe('transaction-created', load);
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', load);
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', load);
+
+        return () => {
+            unsubscribeCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
     }, [months]);
 
     return { data, isLoading, error, reload: load };
@@ -198,6 +222,16 @@ export function useCategoryData(){
 
     useEffect(() => {
         load();
+        
+        const unsubscribeCreated = transactionEvents.subscribe('transaction-created', load);
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', load);
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', load);
+
+        return () => {
+            unsubscribeCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
     }, []);
 
     return { data, isLoading, error, reload: load };
@@ -223,6 +257,16 @@ export function useRecentTransactions(limit: number = 10){
 
     useEffect(() => {
         load();
+        
+        const unsubscribeCreated = transactionEvents.subscribe('transaction-created', load);
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', load);
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', load);
+
+        return () => {
+            unsubscribeCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
     }, [limit]);
 
     return { data, isLoading, error, reload: load };
