@@ -35,11 +35,9 @@ export interface BudgetAlert {
   createdAt: string
 }
 
-// API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-export class BudgetService {
-  private static getAuthHeaders() {
+  function getAuthHeaders() {
     const token = localStorage.getItem("fintrack_token")
     return {
       "Content-Type": "application/json",
@@ -47,11 +45,21 @@ export class BudgetService {
     }
   }
 
-  // Budget Management
-  static async getBudgets(): Promise<Budget[]> {
+  async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Network error' }))
+    console.error('API Error:', errorData)
+    throw new Error(errorData.detail || `HTTP ${response.status}`)
+  }
+  const data = await response.json()
+  return data
+}
+
+  export const budgetApi = {
+  async getBudgets(): Promise<Budget[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -63,12 +71,12 @@ export class BudgetService {
     }
 
     return []
-  }
+  },
 
-  static async getBudget(id: string): Promise<Budget | null> {
+  async getBudget(id: string): Promise<Budget | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -80,15 +88,15 @@ export class BudgetService {
     }
 
     return null
-  }
+  },
 
-  static async createBudget(
+  async createBudget(
     budgetData: Omit<Budget, "id" | "userId" | "spentAmount" | "status" | "createdAt" | "updatedAt">,
   ): Promise<Budget | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
         method: "POST",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(budgetData),
       })
 
@@ -101,13 +109,13 @@ export class BudgetService {
     }
 
     return null
-  }
+  },
 
-  static async updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget | null> {
+  async updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "PUT",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(budgetData),
       })
 
@@ -120,13 +128,13 @@ export class BudgetService {
     }
 
     return null
-  }
+  },
 
-  static async deleteBudget(id: string): Promise<boolean> {
+  async deleteBudget(id: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "DELETE",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       return response.ok
@@ -135,13 +143,12 @@ export class BudgetService {
     }
 
     return false
-  }
+  },
 
-  // Category Management
-  static async getCategories(): Promise<Category[]> {
+  async getCategories(): Promise<Category[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -153,15 +160,15 @@ export class BudgetService {
     }
 
     return []
-  }
+  },
 
-  static async createCategory(
+  async createCategory(
     categoryData: Omit<Category, "id" | "userId" | "transactionCount" | "createdAt" | "updatedAt">,
   ): Promise<Category | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`, {
         method: "POST",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(categoryData),
       })
 
@@ -174,13 +181,13 @@ export class BudgetService {
     }
 
     return null
-  }
+  },
 
-  static async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category | null> {
+  async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: "PUT",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
         body: JSON.stringify(categoryData),
       })
 
@@ -193,13 +200,13 @@ export class BudgetService {
     }
 
     return null
-  }
+  },
 
-  static async deleteCategory(id: string): Promise<boolean> {
+  async deleteCategory(id: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: "DELETE",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       return response.ok
@@ -208,13 +215,13 @@ export class BudgetService {
     }
 
     return false
-  }
+  },
 
   // Budget Alerts
-  static async getBudgetAlerts(): Promise<BudgetAlert[]> {
+  async getBudgetAlerts(): Promise<BudgetAlert[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/alerts`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -226,13 +233,13 @@ export class BudgetService {
     }
 
     return []
-  }
+  },
 
-  static async dismissAlert(alertId: string): Promise<boolean> {
+  async dismissAlert(alertId: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/alerts/${alertId}/dismiss`, {
         method: "POST",
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       return response.ok
@@ -241,14 +248,14 @@ export class BudgetService {
     }
 
     return false
-  }
+  },
 
   // Budget Analytics
-  static async getBudgetAnalytics(period?: string): Promise<any> {
+  async getBudgetAnalytics(period?: string): Promise<any> {
     try {
       const queryParams = period ? `?period=${period}` : ""
       const response = await fetch(`${API_BASE_URL}/budgets/analytics${queryParams}`, {
-        headers: this.getAuthHeaders(),
+        headers: getAuthHeaders(),
       })
 
       if (response.ok) {
@@ -262,3 +269,6 @@ export class BudgetService {
     return null
   }
 }
+
+export default budgetApi
+
