@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, TrendingDown, Target, AlertTriangle } from "lucide-react"
+import { AlertTriangle, Target, TrendingDown, TrendingUp } from "lucide-react"
 
 export function BudgetOverview() {
   const overviewData = [

@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, Trash2, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { AlertTriangle, CheckCircle, Clock, Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { useState } from "react"
 import { BudgetDialog } from "./budget-dialog"
 
 const mockBudgets = [

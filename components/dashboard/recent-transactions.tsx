@@ -182,7 +182,7 @@ export function RecentTransactions() {
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeleteId(transaction.id)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => setDeleteId(transaction.id.toString())} className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar
                             </DropdownMenuItem>

@@ -1,6 +1,5 @@
 "use client"
 
-import { BudgetDialogContainer } from "@/components/budgets/budget-dialog-container"
 import { AIInsights } from "@/components/dashboard/ai-insights"
 import { BudgetOverview } from "@/components/dashboard/budget-overview"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
@@ -8,7 +7,6 @@ import { ExpenseChart } from "@/components/dashboard/expense-chart"
 import { FinancialSummary } from "@/components/dashboard/financial-summary"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
-import { BudgetProvider } from "@/lib/budget-context"
 
 export default function DashboardPage() {
   return (
@@ -28,14 +26,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column - Sidebar */}
-          <BudgetProvider>
             <div className="space-y-6">
               <QuickActions />
               <BudgetOverview />
               <AIInsights />
-              <BudgetDialogContainer />
+
             </div>
-          </BudgetProvider>
+          
         </div>
       </main>
     </div>

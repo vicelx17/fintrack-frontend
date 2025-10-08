@@ -3,13 +3,13 @@
 import { TransactionDialog } from "@/components/transactions/transaction-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useBudget } from "@/lib/budget-context"
 import { FileText, Plus, Target } from "lucide-react"
 import { useState } from "react"
+import { BudgetDialog } from "../budgets/budget-dialog"
 
 export function QuickActions() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
-  const { openBudgetDialog } = useBudget()
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
 
   const actions = [
     {
@@ -24,7 +24,7 @@ export function QuickActions() {
       description: "Crear meta de gastos",
       icon: Target,
       color: "bg-accent text-accent-foreground",
-      action: () => openBudgetDialog(),
+      action: () => setIsBudgetDialogOpen(true),
     },
     {
       title: "Generar Reporte",
@@ -73,6 +73,11 @@ export function QuickActions() {
         open={isTransactionDialogOpen}
         onOpenChange={setIsTransactionDialogOpen}
         onClose={() => setIsTransactionDialogOpen(false)}
+      />
+      <BudgetDialog
+        open={isBudgetDialogOpen}
+        onOpenChange={setIsBudgetDialogOpen}
+        onClose={() => setIsBudgetDialogOpen(false)}
       />
     </>
   )
