@@ -1,4 +1,5 @@
-// Budget management utilities and API integration
+import { budgetEvents } from "../lib/budget-events"
+
 export interface Budget {
   id: string
   userId: string
@@ -10,8 +11,6 @@ export interface Budget {
   endDate: string
   alertThreshold: number
   status: "good" | "warning" | "over"
-  createdAt: string
-  updatedAt: string
 }
 
 export interface Category {
@@ -29,23 +28,32 @@ export interface BudgetAlert {
   id: string
   budgetId: string
   type: "warning" | "exceeded" | "approaching"
+  category: string
   message: string
   severity: "low" | "medium" | "high"
   dismissed: boolean
-  createdAt: string
+}
+
+export interface BudgetOverview {
+  totalBudget: number
+  totalSpent: number
+  available: number
+  percentageUsed: number
+  budgetsExceeded: number
+  totalBudgets: number
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-  function getAuthHeaders() {
-    const token = localStorage.getItem("fintrack_token")
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    }
+function getAuthHeaders() {
+  const token = localStorage.getItem("fintrack_token")
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
   }
+}
 
-  async function handleResponse<T>(response: Response): Promise<T> {
+async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: 'Network error' }))
     console.error('API Error:', errorData)
@@ -55,94 +63,145 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
   return data
 }
 
-  export const budgetApi = {
+export const budgetApi = {
+  
   async getBudgets(): Promise<Budget[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
         headers: getAuthHeaders(),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.budgets || []
-      }
+      return await handleResponse<Budget[]>(response)
     } catch (error) {
       console.error("Error fetching budgets:", error)
+      throw error
     }
-
-    return []
   },
 
-  async getBudget(id: string): Promise<Budget | null> {
+  async getBudget(id: string): Promise<Budget> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         headers: getAuthHeaders(),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.budget
-      }
+      return await handleResponse<Budget>(response)
     } catch (error) {
       console.error("Error fetching budget:", error)
+      throw error
     }
-
-    return null
   },
 
-  async createBudget(
-    budgetData: Omit<Budget, "id" | "userId" | "spentAmount" | "status" | "createdAt" | "updatedAt">,
-  ): Promise<Budget | null> {
+  async createBudget(budgetData: {
+    name: string
+    category: string
+    budgetAmount: number
+    period: string
+    startDate: string
+    endDate: string
+    alertThreshold: number
+    category_id: number
+  }): Promise<Budget> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify(budgetData),
+        body: JSON.stringify({
+          name: budgetData.name,
+          amount: budgetData.budgetAmount,
+          category_id: budgetData.category_id,
+          start_date: budgetData.startDate,
+          end_date: budgetData.endDate,
+          period: budgetData.period,
+          alert_threshold: budgetData.alertThreshold,
+        }),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.budget
-      }
+      const budget = await handleResponse<Budget>(response)
+      budgetEvents.emit('budget-created')
+      return budget
     } catch (error) {
       console.error("Error creating budget:", error)
+      throw error
     }
-
-    return null
   },
 
-  async updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget | null> {
+  async updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(budgetData),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.budget
-      }
+      const budget = await handleResponse<Budget>(response)
+      budgetEvents.emit('budget-updated')
+      return budget
     } catch (error) {
       console.error("Error updating budget:", error)
+      throw error
     }
-
-    return null
   },
 
-  async deleteBudget(id: string): Promise<boolean> {
+  async deleteBudget(id: string): Promise<void> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
-
-      return response.ok
+      await handleResponse<void>(response)
+      budgetEvents.emit('budget-deleted')
     } catch (error) {
       console.error("Error deleting budget:", error)
+      throw error
     }
+  },
 
-    return false
+  async getBudgetAlerts(): Promise<BudgetAlert[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/budgets/alerts`, {
+        headers: getAuthHeaders(),
+      })
+      const data = await handleResponse<{ alerts: BudgetAlert[] }>(response)
+      return data.alerts
+    } catch (error) {
+      console.error("Error fetching budget alerts:", error)
+      throw error
+    }
+  },
+
+  async getBudgetOverview(): Promise<BudgetOverview> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/budgets/overview`, {
+        headers: getAuthHeaders(),
+      })
+      const data = await handleResponse<{ overview: BudgetOverview }>(response)
+      return data.overview
+    } catch (error) {
+      console.error("Error fetching budget overview:", error)
+      throw error
+    }
+  },
+
+  async getBudgetAnalytics(period: string = "monthly"): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/budgets/analytics?period=${period}`, {
+        headers: getAuthHeaders(),
+      })
+      const data = await handleResponse<{ analytics: any }>(response)
+      return data.analytics
+    } catch (error) {
+      console.error("Error fetching budget analytics:", error)
+      throw error
+    }
+  },
+
+  async dismissAlert(alertId: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/budgets/alerts/${alertId}/dismiss`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      })
+      await handleResponse<void>(response)
+    } catch (error) {
+      console.error("Error dismissing alert:", error)
+      throw error
+    }
   },
 
   async getCategories(): Promise<Category[]> {
@@ -150,125 +209,60 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
       const response = await fetch(`${API_BASE_URL}/categories`, {
         headers: getAuthHeaders(),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.categories || []
-      }
+      const data = await handleResponse<{ categories: Category[] }>(response)
+      return data.categories || []
     } catch (error) {
       console.error("Error fetching categories:", error)
+      throw error
     }
-
-    return []
   },
 
-  async createCategory(
-    categoryData: Omit<Category, "id" | "userId" | "transactionCount" | "createdAt" | "updatedAt">,
-  ): Promise<Category | null> {
+  async createCategory(categoryData: {
+    name: string
+    color: string
+    icon?: string
+  }): Promise<Category> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(categoryData),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.category
-      }
+      const data = await handleResponse<{ category: Category }>(response)
+      return data.category
     } catch (error) {
       console.error("Error creating category:", error)
+      throw error
     }
-
-    return null
   },
 
-  async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category | null> {
+  async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(categoryData),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.category
-      }
+      const data = await handleResponse<{ category: Category }>(response)
+      return data.category
     } catch (error) {
       console.error("Error updating category:", error)
+      throw error
     }
-
-    return null
   },
 
-  async deleteCategory(id: string): Promise<boolean> {
+  async deleteCategory(id: string): Promise<void> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
-
-      return response.ok
+      await handleResponse<void>(response)
     } catch (error) {
       console.error("Error deleting category:", error)
+      throw error
     }
-
-    return false
   },
-
-  // Budget Alerts
-  async getBudgetAlerts(): Promise<BudgetAlert[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/budgets/alerts`, {
-        headers: getAuthHeaders(),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.alerts || []
-      }
-    } catch (error) {
-      console.error("Error fetching budget alerts:", error)
-    }
-
-    return []
-  },
-
-  async dismissAlert(alertId: string): Promise<boolean> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/budgets/alerts/${alertId}/dismiss`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      })
-
-      return response.ok
-    } catch (error) {
-      console.error("Error dismissing alert:", error)
-    }
-
-    return false
-  },
-
-  // Budget Analytics
-  async getBudgetAnalytics(period?: string): Promise<any> {
-    try {
-      const queryParams = period ? `?period=${period}` : ""
-      const response = await fetch(`${API_BASE_URL}/budgets/analytics${queryParams}`, {
-        headers: getAuthHeaders(),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.analytics
-      }
-    } catch (error) {
-      console.error("Error fetching budget analytics:", error)
-    }
-
-    return null
-  }
 }
 
 export default budgetApi
-
