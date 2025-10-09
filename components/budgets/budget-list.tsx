@@ -3,40 +3,51 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import { useBudgets } from "@/hooks/use-budgets"
+import { budgetEvents } from "@/lib/budget-events"
 import { budgetApi } from "@/services/budgets-api"
 import { AlertTriangle, CheckCircle, Clock, Edit, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { BudgetDialog } from "./budget-dialog"
 
 export function BudgetList() {
-  const { budgetList, loading, refreshBudgets } = useBudgets()
+  const { budgetList, loading, loadBudgets, refreshBudgets } = useBudgets()
   const [editingBudget, setEditingBudget] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteId, setDeletingId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleEdit = (budget: any) => {
     setEditingBudget(budget)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (budgetId: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este presupuesto?")) {
-      return
-    }
-
-    setDeletingId(budgetId)
+  const handleDelete = async () => {
+    if (!deleteId) return
+    setIsDeleting(true)
     try {
-      await budgetApi.deleteBudget(budgetId)
+      const result = await budgetApi.deleteBudget(deleteId)
+      if (result.success) {
+      budgetEvents.emit('budget-deleted')
       refreshBudgets()
+    } else {
+      console.error("Error deleting budget:", result.message)
+    }
+    
     } catch (error) {
       console.error("Error deleting budget:", error)
-      alert("Error al eliminar el presupuesto")
     } finally {
+      setIsDeleting(false)
       setDeletingId(null)
     }
+  }
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false)
+    setEditingBudget(null)
   }
 
   const getStatusIcon = (status: string) => {
@@ -108,7 +119,7 @@ export function BudgetList() {
             {budgetList.map((budget) => {
               const percentage = (budget.spentAmount / budget.budgetAmount) * 100
               const remaining = budget.budgetAmount - budget.spentAmount
-              const isDeleting = deletingId === budget.id
+              const isDeletingBudget = deleteId === budget.id
 
               return (
                 <div key={budget.id} className="p-4 rounded-lg border bg-card/50 space-y-4">
@@ -127,8 +138,8 @@ export function BudgetList() {
                       {getStatusBadge(budget.status)}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isDeleting}>
-                            {isDeleting ? (
+                          <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isDeletingBudget}>
+                            {isDeletingBudget ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <MoreHorizontal className="w-4 h-4" />
@@ -141,7 +152,7 @@ export function BudgetList() {
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(budget.id)} 
+                            onClick={() => setDeletingId(budget.id)} 
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -176,11 +187,28 @@ export function BudgetList() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         budget={editingBudget}
-        onClose={() => {
-          setEditingBudget(null)
-          setIsDialogOpen(false)
-        }}
+        onClose={handleDialogClose}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteId} onOpenChange={open => !open && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar presupuesto?</DialogTitle>
+          </DialogHeader>
+          <div>
+            ¿Estás seguro de que deseas eliminar este presupuesto? Esta acción no se puede deshacer.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingId(null)} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

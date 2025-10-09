@@ -61,7 +61,7 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
   useEffect(() => {
     if (budget) {
       setFormData({
-        name: budget.category || "",
+        name: budget.name || "",
         category_id: budget.category_id?.toString() || "",
         budgetAmount: budget.budgetAmount?.toString() || "",
         period: budget.period || "monthly",
