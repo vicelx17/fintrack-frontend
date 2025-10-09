@@ -31,12 +31,12 @@ export function BudgetList() {
     try {
       const result = await budgetApi.deleteBudget(deleteId)
       if (result.success) {
-      budgetEvents.emit('budget-deleted')
-      refreshBudgets()
-    } else {
-      console.error("Error deleting budget:", result.message)
-    }
-    
+        budgetEvents.emit('budget-deleted')
+        refreshBudgets()
+      } else {
+        console.error("Error deleting budget:", result.message)
+      }
+
     } catch (error) {
       console.error("Error deleting budget:", error)
     } finally {
@@ -156,8 +156,8 @@ export function BudgetList() {
                             <Edit className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => setDeletingId(budget.id)} 
+                          <DropdownMenuItem
+                            onClick={() => setDeletingId(budget.id)}
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -173,7 +173,18 @@ export function BudgetList() {
                       <span>Gastado: €{budget.spentAmount.toFixed(2)}</span>
                       <span>Presupuesto: €{budget.budgetAmount.toFixed(2)}</span>
                     </div>
-                    <Progress value={Math.min(percentage, 100)} className="h-2" />
+                    <Progress value={Math.min(percentage, 100)}
+                      className={
+                        `h-2" ${
+                        budget.status === "good"
+                        ? "bg-primary/20 [&>div]:bg-primary"
+                        : budget.status === "warning"
+                          ? "bg-yellow-100 [&>div]:bg-yellow-400"
+                          : budget.status === "over"
+                            ? "bg-destructive/20 [&>div]:bg-destructive"
+                            : ""
+                      }`
+                    }/>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{percentage.toFixed(1)}% usado</span>
                       <span className={remaining < 0 ? "text-destructive" : ""}>
