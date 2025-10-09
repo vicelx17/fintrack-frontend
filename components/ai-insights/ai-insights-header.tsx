@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Brain, RefreshCw, Settings, Zap } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export function AIInsightsHeader() {
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const router = useRouter()
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -35,6 +37,40 @@ export function AIInsightsHeader() {
               Powered by AI
             </Badge>
           </div>
+
+          {/* Central navigation panel */}
+          <nav className="flex-1 flex justify-center">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                className="text-primary font-medium"
+                onClick={() => router.push("/dashboard")}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/transactions")}
+              >
+                Transacciones
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/budgets")}
+              >
+                Presupuestos
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/reports")}
+              >
+                Reportes
+              </Button>
+            </div>
+          </nav>
 
           <div className="flex items-center space-x-3">
             <Button variant="outline" size="sm">

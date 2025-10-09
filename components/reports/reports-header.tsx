@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Download, FileText, FileSpreadsheet, Share, Calendar } from "lucide-react"
+import { Calendar, Download, FileSpreadsheet, FileText, Share } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export function ReportsHeader() {
   const [isExporting, setIsExporting] = useState(false)
+  const router = useRouter()
 
   const handleExport = async (format: "pdf" | "csv" | "json") => {
     setIsExporting(true)
@@ -25,6 +27,40 @@ export function ReportsHeader() {
             <h1 className="text-3xl font-bold text-foreground">Reportes y Análisis</h1>
             <p className="text-muted-foreground mt-1">Insights detallados sobre tu situación financiera</p>
           </div>
+
+          {/* Central navigation panel */}
+          <nav className="flex-1 flex justify-center">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                className="text-primary font-medium"
+                onClick={() => router.push("/dashboard")}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/transactions")}
+              >
+                Transacciones
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/budgets")}
+              >
+                Presupuestos
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/ai-insights")}
+              >
+                IA Financiera
+              </Button>
+            </div>
+          </nav>
 
           <div className="flex items-center space-x-3">
             <Button variant="outline" size="sm">
