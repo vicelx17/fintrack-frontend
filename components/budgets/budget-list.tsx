@@ -5,104 +5,38 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
-import { AlertTriangle, CheckCircle, Clock, Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { useBudgets } from "@/hooks/use-budgets"
+import { budgetApi } from "@/services/budgets-api"
+import { AlertTriangle, CheckCircle, Clock, Edit, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { BudgetDialog } from "./budget-dialog"
 
-const mockBudgets = [
-  {
-    id: "1",
-    category: "Alimentación",
-    budgetAmount: 1000,
-    spentAmount: 850,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-  {
-    id: "2",
-    category: "Transporte",
-    budgetAmount: 500,
-    spentAmount: 420,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-  {
-    id: "3",
-    category: "Entretenimiento",
-    budgetAmount: 300,
-    spentAmount: 320,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "over",
-  },
-  {
-    id: "4",
-    category: "Servicios",
-    budgetAmount: 700,
-    spentAmount: 680,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "warning",
-  },
-  {
-    id: "5",
-    category: "Compras",
-    budgetAmount: 400,
-    spentAmount: 280,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-  {
-    id: "6",
-    category: "Salud",
-    budgetAmount: 200,
-    spentAmount: 80,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-  {
-    id: "7",
-    category: "Educación",
-    budgetAmount: 300,
-    spentAmount: 150,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-  {
-    id: "8",
-    category: "Otros",
-    budgetAmount: 100,
-    spentAmount: 70,
-    period: "monthly",
-    startDate: "2025-01-01",
-    endDate: "2025-01-31",
-    status: "good",
-  },
-]
-
 export function BudgetList() {
+  const { budgetList, loading, refreshBudgets } = useBudgets()
   const [editingBudget, setEditingBudget] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleEdit = (budget: any) => {
     setEditingBudget(budget)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (budgetId: string) => {
-    console.log("Delete budget:", budgetId)
+  const handleDelete = async (budgetId: string) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar este presupuesto?")) {
+      return
+    }
+
+    setDeletingId(budgetId)
+    try {
+      await budgetApi.deleteBudget(budgetId)
+      refreshBudgets()
+    } catch (error) {
+      console.error("Error deleting budget:", error)
+      alert("Error al eliminar el presupuesto")
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -131,6 +65,38 @@ export function BudgetList() {
     }
   }
 
+  if (loading.budgets.isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Presupuestos Activos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Cargando presupuestos...</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (budgetList.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Presupuestos Activos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No tienes presupuestos activos.</p>
+            <p className="text-sm mt-2">Crea tu primer presupuesto para comenzar a controlar tus gastos.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <>
       <Card>
@@ -139,9 +105,10 @@ export function BudgetList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {mockBudgets.map((budget) => {
+            {budgetList.map((budget) => {
               const percentage = (budget.spentAmount / budget.budgetAmount) * 100
               const remaining = budget.budgetAmount - budget.spentAmount
+              const isDeleting = deletingId === budget.id
 
               return (
                 <div key={budget.id} className="p-4 rounded-lg border bg-card/50 space-y-4">
@@ -160,8 +127,12 @@ export function BudgetList() {
                       {getStatusBadge(budget.status)}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="w-8 h-8">
-                            <MoreHorizontal className="w-4 h-4" />
+                          <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isDeleting}>
+                            {isDeleting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <MoreHorizontal className="w-4 h-4" />
+                            )}
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -169,7 +140,10 @@ export function BudgetList() {
                             <Edit className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(budget.id)} className="text-destructive">
+                          <DropdownMenuItem 
+                            onClick={() => handleDelete(budget.id)} 
+                            className="text-destructive"
+                          >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Eliminar
                           </DropdownMenuItem>

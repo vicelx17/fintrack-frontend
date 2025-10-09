@@ -1,42 +1,55 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { AlertTriangle, Target, TrendingDown, TrendingUp } from "lucide-react"
+import { useBudgets } from "@/hooks/use-budgets"
+import { AlertTriangle, Loader2, Target, TrendingDown, TrendingUp } from "lucide-react"
 
 export function BudgetOverview() {
+  const { budgetOverview, loading } = useBudgets()
+
+  if (loading.overview.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!budgetOverview) {
+    return null
+  }
+
   const overviewData = [
     {
       title: "Presupuesto Total",
-      value: "€3,500.00",
+      value: `€${budgetOverview.totalBudget.toFixed(2)}`,
       subtitle: "Este mes",
       icon: Target,
       color: "text-primary",
     },
     {
       title: "Gastado",
-      value: "€2,850.30",
-      subtitle: "81.4% del presupuesto",
+      value: `€${budgetOverview.totalSpent.toFixed(2)}`,
+      subtitle: `${budgetOverview.percentageUsed.toFixed(1)}% del presupuesto`,
       icon: TrendingDown,
       color: "text-secondary",
     },
     {
       title: "Disponible",
-      value: "€649.70",
-      subtitle: "18.6% restante",
+      value: `€${budgetOverview.available.toFixed(2)}`,
+      subtitle: `${(100 - budgetOverview.percentageUsed).toFixed(1)}% restante`,
       icon: TrendingUp,
-      color: "text-primary",
+      color: budgetOverview.available > 0 ? "text-primary" : "text-destructive",
     },
     {
       title: "Presupuestos Excedidos",
-      value: "2",
-      subtitle: "De 8 categorías",
+      value: budgetOverview.budgetsExceeded.toString(),
+      subtitle: `De ${budgetOverview.totalBudgets} categorías`,
       icon: AlertTriangle,
-      color: "text-destructive",
+      color: budgetOverview.budgetsExceeded > 0 ? "text-destructive" : "text-primary",
     },
   ]
-
-  const totalBudget = 3500
-  const totalSpent = 2850.3
-  const percentage = (totalSpent / totalBudget) * 100
 
   return (
     <div className="space-y-6">
@@ -70,13 +83,13 @@ export function BudgetOverview() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Gastado</span>
               <span className="text-sm text-muted-foreground">
-                €{totalSpent.toFixed(2)} / €{totalBudget.toFixed(2)}
+                €{budgetOverview.totalSpent.toFixed(2)} / €{budgetOverview.totalBudget.toFixed(2)}
               </span>
             </div>
-            <Progress value={percentage} className="h-3" />
+            <Progress value={budgetOverview.percentageUsed} className="h-3" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{percentage.toFixed(1)}% usado</span>
-              <span>€{(totalBudget - totalSpent).toFixed(2)} restante</span>
+              <span>{budgetOverview.percentageUsed.toFixed(1)}% usado</span>
+              <span>€{budgetOverview.available.toFixed(2)} restante</span>
             </div>
           </div>
         </CardContent>

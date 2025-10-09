@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { budgetEvents } from "../lib/budget-events"
-import { Budget, BudgetAlert, budgetApi } from "../services/budgets"
+import { Budget, BudgetAlert, budgetApi } from "../services/budgets-api"
 
 interface LoadingState {
     isLoading: boolean
