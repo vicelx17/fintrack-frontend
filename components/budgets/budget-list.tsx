@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { useBudgets } from "@/hooks/use-budgets"
 import { budgetEvents } from "@/lib/budget-events"
 import { budgetApi } from "@/services/budgets-api"
-import { AlertTriangle, CheckCircle, Clock, Edit, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
+import { AlertTriangle, CheckCircle, Edit, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { BudgetDialog } from "./budget-dialog"
 
@@ -55,7 +55,7 @@ export function BudgetList() {
       case "good":
         return <CheckCircle className="w-4 h-4 text-primary" />
       case "warning":
-        return <Clock className="w-4 h-4 text-secondary" />
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
       case "over":
         return <AlertTriangle className="w-4 h-4 text-destructive" />
       default:
@@ -68,7 +68,12 @@ export function BudgetList() {
       case "good":
         return <Badge className="bg-primary/10 text-primary border-primary/20">En Control</Badge>
       case "warning":
-        return <Badge className="bg-secondary/10 text-secondary border-secondary/20">Cerca del Límite</Badge>
+        return (
+          <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3 text-yellow-500" />
+            Cerca del Límite
+          </Badge>
+        )
       case "over":
         return <Badge variant="destructive">Excedido</Badge>
       default:

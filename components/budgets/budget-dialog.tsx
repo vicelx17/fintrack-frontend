@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { budgetEvents } from "@/lib/budget-events"
 import { budgetApi } from "@/services/budgets-api"
 import { categoriesApi } from "@/services/categories-api"
 import { format } from "date-fns"
@@ -119,8 +120,10 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
 
       if (budget) {
         await budgetApi.updateBudget(budget.id, budgetData)
+        budgetEvents.emit('budget-updated')
       } else {
         await budgetApi.createBudget(budgetData)
+        budgetEvents.emit('budget-created')
       }
 
       onOpenChange(false)
@@ -272,7 +275,7 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
                     mode="single"
                     selected={formData.startDate}
                     onSelect={(date) => date && handleInputChange("startDate", date)}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -292,7 +295,7 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
                     mode="single"
                     selected={formData.endDate}
                     onSelect={(date) => date && handleInputChange("endDate", date)}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>

@@ -23,14 +23,21 @@ const categoryIcons: { [key: string]: any } = {
 }
 
 const getCategoryIcon = (category: string) => {
-  return categoryIcons[category] || ReceiptEuro 
+  return categoryIcons[category] || ReceiptEuro
 }
 
 export function RecentTransactions() {
-  const { data: recentTransactions, isLoading, error, reload } = useRecentTransactions(5)
+  const { data: recentTransactions, isLoading, error, reload } = useRecentTransactions(10)
   const { toast } = useToast()
+  const [editingTransaction, setEditingTransaction] = useState(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleEdit = (budget: any) => {
+    setEditingTransaction(budget)
+    setIsDialogOpen(true)
+  }
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -61,6 +68,11 @@ export function RecentTransactions() {
       setIsDeleting(false)
       setDeleteId(null)
     }
+  }
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false)
+    setEditingTransaction(null)
   }
 
   return (
@@ -117,33 +129,30 @@ export function RecentTransactions() {
                   return (
                     <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors">
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${
-                          isIncome
+                        <div className={`p-2 rounded-lg ${isIncome
                             ? "bg-primary/10"
                             : isExpense
-                            ? "bg-destructive/10"
-                            : "bg-muted"
-                        }`}>
-                          <Icon className={`w-4 h-4 ${
-                            isIncome
+                              ? "bg-destructive/10"
+                              : "bg-muted"
+                          }`}>
+                          <Icon className={`w-4 h-4 ${isIncome
                               ? "text-primary"
                               : isExpense
-                              ? "text-destructive"
-                              : "text-foreground"
-                          }`} />
+                                ? "text-destructive"
+                                : "text-foreground"
+                            }`} />
                         </div>
                         <div>
                           <p className="font-medium">{transaction.description}</p>
                           <div className="flex items-center space-x-2">
                             <Badge
                               variant="outline"
-                              className={`text-xs border-2 ${
-                                isIncome
+                              className={`text-xs border-2 ${isIncome
                                   ? "border-primary"
                                   : isExpense
-                                  ? "border-destructive"
-                                  : ""
-                              }`}
+                                    ? "border-destructive"
+                                    : ""
+                                }`}
                             >
                               {transaction.category}
                             </Badge>
@@ -159,13 +168,12 @@ export function RecentTransactions() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span
-                          className={`font-semibold ${
-                            isIncome
+                          className={`font-semibold ${isIncome
                               ? "text-primary"
                               : isExpense
-                              ? "text-destructive"
-                              : "text-foreground"
-                          }`}
+                                ? "text-destructive"
+                                : "text-foreground"
+                            }`}
                         >
                           {isIncome && "+"}
                           {isExpense && "-"}
@@ -178,7 +186,7 @@ export function RecentTransactions() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {/* Implement edit if needed */}}>
+                            <DropdownMenuItem onClick={() => {/* Implement edit if needed */ }}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>

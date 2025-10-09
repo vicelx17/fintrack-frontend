@@ -56,9 +56,6 @@ export function BudgetHeader() {
             </nav>
 
             <div className="flex items-center space-x-3">
-              <Button variant="outline" onClick={() => router.push("/dashboard")}>
-                Volver al Dashboard
-              </Button>
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nuevo Presupuesto
