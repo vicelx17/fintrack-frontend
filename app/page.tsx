@@ -1,8 +1,13 @@
+"use client"
+
 import { LoginForm } from "@/components/auth/login-form"
 import { Card, CardContent } from "@/components/ui/card"
 import { BarChart3, Shield, Smartphone, TrendingUp } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
+  const router = useRouter()
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background">
       {/* Header */}
@@ -16,12 +21,12 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-foreground">FinTrack</h1>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
-              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                Características
-              </a>
-              <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/suggestions" className="text-foreground font-medium">
+                Sugerencias
+              </Link>
+              <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                 Contacto
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
@@ -62,7 +67,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Seguridad Total</h3>
-                    <p className="text-sm text-muted-foreground">Encriptación bancaria</p>
+                    <p className="text-sm text-muted-foreground">Datos encriptados</p>
                   </div>
                 </CardContent>
               </Card>
