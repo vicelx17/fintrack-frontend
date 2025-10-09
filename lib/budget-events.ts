@@ -8,9 +8,9 @@ class BudgetEventEmitter {
         if (!this.listeners.has(event)) {
             this.listeners.set(event, new Set())
         }
-        
+
         this.listeners.get(event)!.add(callback)
-        
+
         // Return función de desuscripción
         return () => {
             this.listeners.get(event)?.delete(callback)
@@ -22,6 +22,11 @@ class BudgetEventEmitter {
         if (callbacks) {
             callbacks.forEach(callback => callback())
         }
+    }
+    emitChange() {
+        this.emit('budget-created');
+        this.emit('budget-updated');
+        this.emit('budget-deleted');
     }
 }
 

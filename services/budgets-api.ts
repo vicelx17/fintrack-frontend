@@ -60,8 +60,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new Error(errorData.detail || `HTTP ${response.status}`)
   }
   const data = await response.json()
+  console.log("API Response Data:", data)
   return data
-}
+} 
 
 export const budgetApi = {
   
@@ -70,6 +71,7 @@ export const budgetApi = {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
         headers: getAuthHeaders(),
       })
+      console.log("Response:", response)
       return await handleResponse<Budget[]>(response)
     } catch (error) {
       console.error("Error fetching budgets:", error)
@@ -113,6 +115,7 @@ export const budgetApi = {
           alert_threshold: budgetData.alertThreshold,
         }),
       })
+      console.log("Response:", response)
       const budget = await handleResponse<Budget>(response)
       budgetEvents.emit('budget-created')
       return budget
@@ -122,12 +125,29 @@ export const budgetApi = {
     }
   },
 
-  async updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget> {
+  async updateBudget(id: string, budgetData: {
+    name: string
+    category: string
+    budgetAmount: number
+    period: string
+    startDate: string
+    endDate: string
+    alertThreshold: number
+    category_id: number
+  }): Promise<Budget> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify(budgetData),
+        body: JSON.stringify({
+          name: budgetData.name,
+          amount: budgetData.budgetAmount,
+          category_id: budgetData.category_id,
+          start_date: budgetData.startDate,
+          end_date: budgetData.endDate,
+          period: budgetData.period,
+          alert_threshold: budgetData.alertThreshold,
+        }),
       })
       const budget = await handleResponse<Budget>(response)
       budgetEvents.emit('budget-updated')
@@ -138,14 +158,14 @@ export const budgetApi = {
     }
   },
 
-  async deleteBudget(id: string): Promise<void> {
+  async deleteBudget(id: string): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
-      await handleResponse<void>(response)
-      budgetEvents.emit('budget-deleted')
+      console.log("DELETE RESPONSE🗑️:", response)
+      return await handleResponse<{ success: boolean; message: string }>(response)
     } catch (error) {
       console.error("Error deleting budget:", error)
       throw error
