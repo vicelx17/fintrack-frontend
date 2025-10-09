@@ -4,17 +4,18 @@ export interface Category {
   id: number
   name: string
   user_id: number
-  created_at: string
-  updated_at: string
 }
 
 export interface CategoryCreate {
   name: string
-  type: "income" | "expense"
+}
+
+export interface CategoryUpdate {
+  name?: string
 }
 
 // API Base URL
-const API_BASE_URL = "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 function getAuthHeaders() {
   const token = localStorage.getItem('fintrack_token');
@@ -26,8 +27,6 @@ function getAuthHeaders() {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    console.log('Response status:', response.status);
-    console.log('Response URL:', response.url);
     const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
     console.error('API Error:', errorData);
     throw new Error(errorData.detail || `HTTP ${response.status}`);
@@ -43,7 +42,6 @@ export const categoriesApi = {
         method: 'GET',
         headers: getAuthHeaders(),
       });
-      console.log("Categories response:", response);
       return await handleResponse<Category[]>(response);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -66,7 +64,7 @@ export const categoriesApi = {
     }
   },
 
-  async updateCategory(id: number, categoryData: Partial<CategoryCreate>): Promise<Category> {
+  async updateCategory(id: number, categoryData: CategoryUpdate): Promise<Category> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: 'PUT',
@@ -81,14 +79,17 @@ export const categoriesApi = {
     }
   },
 
-  async deleteCategory(id: number): Promise<boolean> {
+  async deleteCategory(id: number): Promise<void> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
 
-      return response.ok;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
     } catch (error) {
       console.error("Error deleting category:", error);
       throw error;

@@ -16,10 +16,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { budgetApi } from "@/services/budgets-api"
+import { categoriesApi } from "@/services/categories-api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
+
+interface Category {
+  id: number
+  name: string
+  user_id: number
+}
 
 interface BudgetDialogProps {
   open: boolean
@@ -29,8 +37,11 @@ interface BudgetDialogProps {
 }
 
 export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDialogProps) {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
   const [formData, setFormData] = useState({
-    category: "",
+    name: "",
+    category_id: "",
     budgetAmount: "",
     period: "monthly",
     startDate: new Date(),
@@ -39,27 +50,23 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const categories = [
-    "Alimentación",
-    "Transporte",
-    "Entretenimiento",
-    "Servicios",
-    "Compras",
-    "Salud",
-    "Educación",
-    "Vivienda",
-    "Otros",
-  ]
+  useEffect(() => {
+    if (open) {
+      loadCategories()
+    }
+  }, [open])
 
   useEffect(() => {
     if (budget) {
       setFormData({
-        category: budget.category,
-        budgetAmount: budget.budgetAmount.toString(),
-        period: budget.period,
-        startDate: new Date(budget.startDate),
-        endDate: new Date(budget.endDate),
+        name: budget.category || "",
+        category_id: budget.category_id?.toString() || "",
+        budgetAmount: budget.budgetAmount?.toString() || "",
+        period: budget.period || "monthly",
+        startDate: budget.startDate ? new Date(budget.startDate) : new Date(),
+        endDate: budget.endDate ? new Date(budget.endDate) : new Date(),
         alertThreshold: budget.alertThreshold?.toString() || "80",
       })
     } else {
@@ -67,7 +74,8 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
       setFormData({
-        category: "",
+        name: "",
+        category_id: "",
         budgetAmount: "",
         period: "monthly",
         startDate: now,
@@ -75,18 +83,54 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
         alertThreshold: "80",
       })
     }
-  }, [budget])
+  }, [budget, open])
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true)
+      const data = await categoriesApi.getCategories()
+      setCategories(data)
+    } catch (error) {
+      console.error("Error loading categories:", error)
+      setError("Error al cargar las categorías")
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      const selectedCategory = categories.find(c => c.id.toString() === formData.category_id)
+
+      const budgetData = {
+        name: formData.name || selectedCategory?.name || "Presupuesto",
+        category: selectedCategory?.name || "",
+        budgetAmount: parseFloat(formData.budgetAmount),
+        period: formData.period,
+        startDate: format(formData.startDate, "yyyy-MM-dd"),
+        endDate: format(formData.endDate, "yyyy-MM-dd"),
+        alertThreshold: parseInt(formData.alertThreshold),
+        category_id: parseInt(formData.category_id),
+      }
+
+      if (budget) {
+        await budgetApi.updateBudget(budget.id, budgetData)
+      } else {
+        await budgetApi.createBudget(budgetData)
+      }
+
       onOpenChange(false)
       if (onClose) onClose()
-    }, 1000)
+    } catch (error) {
+      console.error("Error saving budget:", error)
+      setError(error instanceof Error ? error.message : "Error al guardar el presupuesto")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleInputChange = (field: string, value: any) => {
@@ -126,22 +170,56 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Nombre *</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Nombre del presupuesto"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              required
+            />
+          </div>
+
           {/* Category and Amount */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Categoría *</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {loadingCategories ? (
+                <div className="flex items-center justify-center h-10 border rounded">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
+              ) : (
+                <Select
+                  value={formData.category_id}
+                  onValueChange={(value) => handleInputChange("category_id", value)}
+                  disabled={categories.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={categories.length === 0 ? "No hay categorías" : "Seleccionar categoría"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {categories.length === 0 && !loadingCategories && (
+                <p className="text-xs text-muted-foreground">
+                  Crea una categoría primero en el gestor de categorías
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -193,7 +271,7 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
                   <Calendar
                     mode="single"
                     selected={formData.startDate}
-                    onSelect={(date) => handleInputChange("startDate", date)}
+                    onSelect={(date) => date && handleInputChange("startDate", date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -213,7 +291,7 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
                   <Calendar
                     mode="single"
                     selected={formData.endDate}
-                    onSelect={(date) => handleInputChange("endDate", date)}
+                    onSelect={(date) => date && handleInputChange("endDate", date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -242,11 +320,18 @@ export function BudgetDialog({ open, onOpenChange, budget, onClose }: BudgetDial
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Guardando..." : budget ? "Actualizar" : "Crear Presupuesto"}
+            <Button type="submit" disabled={isLoading || categories.length === 0}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                budget ? "Actualizar" : "Crear Presupuesto"
+              )}
             </Button>
           </DialogFooter>
         </form>

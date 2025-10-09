@@ -6,7 +6,7 @@ export interface Budget {
   category: string
   budgetAmount: number
   spentAmount: number
-  period: "weekly" | "monthly" | "quarterly" | "yearly"
+  period: string
   startDate: string
   endDate: string
   alertThreshold: number

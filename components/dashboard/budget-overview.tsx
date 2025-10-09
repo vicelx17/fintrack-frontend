@@ -9,7 +9,7 @@ export function BudgetOverview() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Presupuestos del Mes</CardTitle>
+        <CardTitle>Presupuestos</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading && (

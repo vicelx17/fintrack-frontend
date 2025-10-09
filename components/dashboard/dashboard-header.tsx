@@ -1,9 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Bell, User, Settings, LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Bell, LogOut, Settings, TrendingUp, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export function DashboardHeader() {
   const [isDark, setIsDark] = useState(false)
@@ -71,13 +71,6 @@ export function DashboardHeader() {
                 onClick={() => router.push("/ai-insights")}
               >
                 IA Financiera
-              </Button>
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => router.push("/admin")}
-              >
-                Admin
               </Button>
             </nav>
           </div>

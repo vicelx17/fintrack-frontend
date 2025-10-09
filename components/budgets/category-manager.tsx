@@ -1,43 +1,117 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Edit, MoreHorizontal, Plus, Tag, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { categoriesApi } from "@/services/categories-api"
+import { Edit, Loader2, MoreHorizontal, Plus, Tag, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
 
-const mockCategories = [
-  { id: "1", name: "Alimentación", color: "#2D5A3D", transactionCount: 45 },
-  { id: "2", name: "Transporte", color: "#4A7F5C", transactionCount: 23 },
-  { id: "3", name: "Entretenimiento", color: "#6B9B7A", transactionCount: 18 },
-  { id: "4", name: "Servicios", color: "#8CB798", transactionCount: 12 },
-  { id: "5", name: "Compras", color: "#AED3B6", transactionCount: 31 },
-  { id: "6", name: "Salud", color: "#D0EFD4", transactionCount: 8 },
-  { id: "7", name: "Educación", color: "#2D5A3D", transactionCount: 5 },
-  { id: "8", name: "Vivienda", color: "#4A7F5C", transactionCount: 15 },
-]
+interface Category {
+  id: number
+  name: string
+  user_id: number
+}
 
 export function CategoryManager() {
+  const [categories, setCategories] = useState<Category[]>([])
   const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
   const [newCategoryName, setNewCategoryName] = useState("")
+  const [editCategoryName, setEditCategoryName] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  const handleAddCategory = () => {
-    if (newCategoryName.trim()) {
-      console.log("Add category:", newCategoryName)
-      setNewCategoryName("")
-      setIsAddingCategory(false)
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true)
+      const data = await categoriesApi.getCategories()
+      setCategories(data)
+    } catch (error) {
+      console.error("Error loading categories:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleEditCategory = (categoryId: string) => {
-    console.log("Edit category:", categoryId)
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return
+
+    try {
+      await categoriesApi.createCategory({ name: newCategoryName })
+      setNewCategoryName("")
+      setIsAddingCategory(false)
+      loadCategories()
+    } catch (error) {
+      console.error("Error creating category:", error)
+      alert("Error al crear la categoría")
+    }
   }
 
-  const handleDeleteCategory = (categoryId: string) => {
-    console.log("Delete category:", categoryId)
+  const handleEditCategory = (category: Category) => {
+    setEditingCategoryId(category.id)
+    setEditCategoryName(category.name)
+  }
+
+  const handleSaveEdit = async (categoryId: number) => {
+    if (!editCategoryName.trim()) return
+
+    try {
+      await categoriesApi.updateCategory(categoryId, { name: editCategoryName })
+      setEditingCategoryId(null)
+      setEditCategoryName("")
+      loadCategories()
+    } catch (error) {
+      console.error("Error updating category:", error)
+      alert("Error al actualizar la categoría")
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCategoryId(null)
+    setEditCategoryName("")
+  }
+
+  const handleDeleteCategory = async (categoryId: number) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar esta categoría? Se eliminarán también todos los presupuestos y transacciones asociadas.")) {
+      return
+    }
+
+    setDeletingId(categoryId)
+    try {
+      await categoriesApi.deleteCategory(categoryId)
+      loadCategories()
+    } catch (error) {
+      console.error("Error deleting category:", error)
+      alert("Error al eliminar la categoría")
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center space-x-2">
+            <Tag className="w-5 h-5 text-primary" />
+            <span>Categorías</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Cargando categorías...</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -69,7 +143,10 @@ export function CategoryManager() {
                 <Button size="sm" onClick={handleAddCategory}>
                   Agregar
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setIsAddingCategory(false)}>
+                <Button size="sm" variant="outline" onClick={() => {
+                  setIsAddingCategory(false)
+                  setNewCategoryName("")
+                }}>
                   Cancelar
                 </Button>
               </div>
@@ -78,40 +155,69 @@ export function CategoryManager() {
 
           {/* Category List */}
           <div className="space-y-2">
-            {mockCategories.map((category) => (
-              <div key={category.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
-                  <div>
-                    <span className="font-medium">{category.name}</span>
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {category.transactionCount} transacciones
-                    </Badge>
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEditCategory(category.id)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="text-destructive"
-                      disabled={category.transactionCount > 0}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Eliminar
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+            {categories.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No tienes categorías creadas.</p>
+                <p className="text-sm mt-2">Crea tu primera categoría para organizar tus presupuestos.</p>
               </div>
-            ))}
+            ) : (
+              categories.map((category) => {
+                const isDeleting = deletingId === category.id
+                const isEditing = editingCategoryId === category.id
+
+                return (
+                  <div key={category.id} className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+                    {isEditing ? (
+                      <div className="flex-1 flex items-center space-x-2">
+                        <Input
+                          value={editCategoryName}
+                          onChange={(e) => setEditCategoryName(e.target.value)}
+                          onKeyPress={(e) => e.key === "Enter" && handleSaveEdit(category.id)}
+                          className="h-8"
+                        />
+                        <Button size="sm" onClick={() => handleSaveEdit(category.id)}>
+                          Guardar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                          Cancelar
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-4 h-4 rounded-full bg-primary" />
+                          <span className="font-medium">{category.name}</span>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isDeleting}>
+                              {isDeleting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <MoreHorizontal className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditCategory(category)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteCategory(category.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
       </CardContent>
