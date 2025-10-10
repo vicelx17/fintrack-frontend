@@ -55,7 +55,7 @@ export function BudgetList() {
       case "good":
         return <CheckCircle className="w-4 h-4 text-primary" />
       case "warning":
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
+        return <AlertTriangle className="w-4 h-4 text-orange-500" />
       case "over":
         return <AlertTriangle className="w-4 h-4 text-destructive" />
       default:
@@ -69,8 +69,8 @@ export function BudgetList() {
         return <Badge className="bg-primary/10 text-primary border-primary/20">En Control</Badge>
       case "warning":
         return (
-          <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 text-yellow-500" />
+          <Badge className="bg-orange-100 text-orange-700 border-orange-200 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3 text-orange-500" />
             Cerca del Límite
           </Badge>
         )
@@ -101,11 +101,11 @@ export function BudgetList() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Presupuestos Activos</CardTitle>
+          <CardTitle>Lista de presupuestos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            <p>No tienes presupuestos activos.</p>
+            <p>No tienes presupuestos.</p>
             <p className="text-sm mt-2">Crea tu primer presupuesto para comenzar a controlar tus gastos.</p>
           </div>
         </CardContent>
@@ -117,7 +117,7 @@ export function BudgetList() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Presupuestos Activos</CardTitle>
+          <CardTitle>Lista de presupuestos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -179,7 +179,7 @@ export function BudgetList() {
                         budget.status === "good"
                         ? "bg-primary/20 [&>div]:bg-primary"
                         : budget.status === "warning"
-                          ? "bg-yellow-100 [&>div]:bg-yellow-400"
+                          ? "bg-orange-100 [&>div]:bg-orange-400"
                           : budget.status === "over"
                             ? "bg-destructive/20 [&>div]:bg-destructive"
                             : ""

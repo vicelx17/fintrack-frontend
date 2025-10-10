@@ -2,11 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { categoriesApi } from "@/services/categories-api"
-import { Edit, Loader2, MoreHorizontal, Plus, Tag, Trash2 } from "lucide-react"
+import { Loader2, Tag } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 interface Category {
@@ -17,12 +16,11 @@ interface Category {
 
 export function CategoryManager() {
   const [categories, setCategories] = useState<Category[]>([])
-  const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
-  const [newCategoryName, setNewCategoryName] = useState("")
   const [editCategoryName, setEditCategoryName] = useState("")
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     loadCategories()
@@ -37,20 +35,6 @@ export function CategoryManager() {
       console.error("Error loading categories:", error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return
-
-    try {
-      await categoriesApi.createCategory({ name: newCategoryName })
-      setNewCategoryName("")
-      setIsAddingCategory(false)
-      loadCategories()
-    } catch (error) {
-      console.error("Error creating category:", error)
-      alert("Error al crear la categoría")
     }
   }
 
@@ -121,38 +105,9 @@ export function CategoryManager() {
           <Tag className="w-5 h-5 text-primary" />
           <span>Categorías</span>
         </CardTitle>
-        <Button size="sm" onClick={() => setIsAddingCategory(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Agregar
-        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Add New Category */}
-          {isAddingCategory && (
-            <div className="p-3 rounded-lg border bg-accent/50 space-y-3">
-              <Label htmlFor="newCategory">Nueva Categoría</Label>
-              <Input
-                id="newCategory"
-                placeholder="Nombre de la categoría"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddCategory()}
-              />
-              <div className="flex space-x-2">
-                <Button size="sm" onClick={handleAddCategory}>
-                  Agregar
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => {
-                  setIsAddingCategory(false)
-                  setNewCategoryName("")
-                }}>
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Category List */}
           <div className="space-y-2">
             {categories.length === 0 ? (
@@ -184,34 +139,14 @@ export function CategoryManager() {
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-4 h-4 rounded-full bg-primary" />
-                          <span className="font-medium">{category.name}</span>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isDeleting}>
-                              {isDeleting ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <MoreHorizontal className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditCategory(category)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteCategory(category.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <span className="font-medium">{category.name}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/transactions?category=${category.id}`)}
+                        >
+                          Ver transacciones
+                        </Button>
                       </>
                     )}
                   </div>

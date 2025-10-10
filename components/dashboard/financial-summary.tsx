@@ -67,6 +67,7 @@ export function FinancialSummary() {
       change: financialSummary.changes?.savings || "0.0%",
       trend: String(financialSummary.changes?.savings || "").startsWith('+') ? "up" : "down",
       icon: PiggyBank,
+      description: "vs mes anterior"
     },
   ]
 

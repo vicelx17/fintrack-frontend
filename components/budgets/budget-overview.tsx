@@ -73,10 +73,9 @@ export function BudgetOverview() {
         })}
       </div>
 
-      {/* Overall Progress */}
       <Card>
         <CardHeader>
-          <CardTitle>Progreso General del Mes</CardTitle>
+          <CardTitle>Presupuesto general</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
