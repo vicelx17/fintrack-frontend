@@ -80,7 +80,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
         amount: Math.abs(transaction.amount).toString(),
         description: transaction.description,
         categoryId: transaction.categoryId?.toString() || "",
-        date: new Date(transaction.transactionDate),
+        date: new Date(transaction.transactionDate || transaction.date),
         notes: transaction.notes || "",
       })
     } else {
