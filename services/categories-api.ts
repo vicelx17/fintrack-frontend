@@ -1,9 +1,8 @@
-// Categories management utilities and API integration
-
 export interface Category {
   id: number
   name: string
   user_id: number
+  transaction_count?: number
 }
 
 export interface CategoryCreate {

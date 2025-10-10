@@ -100,8 +100,6 @@ export const transactionsApi = {
       const response = await fetch(`${API_BASE_URL}/transactions/stats?${queryParams.toString()}`, {
         headers: getAuthHeaders(),
       })
-      const url = `${API_BASE_URL}/transactions/stats?${queryParams.toString()}`
-      console.log('📊 Stats URL:', url)
       return await handleResponse<TransactionStats>(response)
     } catch (error) {
       console.error("Error fetching transaction stats:", error)

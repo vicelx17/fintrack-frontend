@@ -62,10 +62,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json()
   console.log("API Response Data:", data)
   return data
-} 
+}
 
 export const budgetApi = {
-  
+
   async getBudgets(): Promise<Budget[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`, {
@@ -220,66 +220,6 @@ export const budgetApi = {
       await handleResponse<void>(response)
     } catch (error) {
       console.error("Error dismissing alert:", error)
-      throw error
-    }
-  },
-
-  async getCategories(): Promise<Category[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
-        headers: getAuthHeaders(),
-      })
-      const data = await handleResponse<{ categories: Category[] }>(response)
-      return data.categories || []
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-      throw error
-    }
-  },
-
-  async createCategory(categoryData: {
-    name: string
-    color: string
-    icon?: string
-  }): Promise<Category> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(categoryData),
-      })
-      const data = await handleResponse<{ category: Category }>(response)
-      return data.category
-    } catch (error) {
-      console.error("Error creating category:", error)
-      throw error
-    }
-  },
-
-  async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(categoryData),
-      })
-      const data = await handleResponse<{ category: Category }>(response)
-      return data.category
-    } catch (error) {
-      console.error("Error updating category:", error)
-      throw error
-    }
-  },
-
-  async deleteCategory(id: string): Promise<void> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      })
-      await handleResponse<void>(response)
-    } catch (error) {
-      console.error("Error deleting category:", error)
       throw error
     }
   },

@@ -61,8 +61,6 @@ function getAuthHeaders() {
 
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-        console.log('Response status:', response.status);
-        console.log('Response URL:', response.url);
         const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
         console.error('API Error:', errorData);
         throw new Error(errorData.detail || 'HTPP ${response.status}');
