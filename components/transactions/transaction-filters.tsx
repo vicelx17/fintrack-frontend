@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categoriesApi, type Category } from "@/services/categories-api"
 import type { TransactionFilters as ITransactionFilters } from "@/services/transactions-api"
 import { Search, X } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 interface TransactionFiltersProps {
@@ -21,13 +22,20 @@ export function TransactionFilters({ onFiltersChange }: TransactionFiltersProps)
   const [selectedType, setSelectedType] = useState("all")
   const [dateRange, setDateRange] = useState("all")
   const [categories, setCategories] = useState<Category[]>([])
+  const searchParams = useSearchParams()
 
-  // Usar useRef para mantener referencia estable de onFiltersChange
   const onFiltersChangeRef = useRef(onFiltersChange)
   
   useEffect(() => {
     onFiltersChangeRef.current = onFiltersChange
   }, [onFiltersChange])
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category") || ""
+    if (categoryParam) {
+      setSelectedCategory(categoryParam)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const loadCategories = async () => {

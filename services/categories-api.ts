@@ -31,6 +31,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new Error(errorData.detail || `HTTP ${response.status}`);
   }
   const data = await response.json();
+  console.log('Category Data:', data);
   return data;
 }
 

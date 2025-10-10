@@ -11,6 +11,7 @@ interface Category {
   id: number
   name: string
   user_id: number
+  transaction_count?: number
 }
 
 export function CategoryManager() {
@@ -76,12 +77,25 @@ export function CategoryManager() {
                   key={category.id}
                   className="flex flex-row items-center justify-between p-3 rounded-lg border bg-card/50"
                 >
-                  <span className="font-medium">{category.name}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium">{category.name}</span>
+                    {category.transaction_count !== undefined && (
+                      category.transaction_count > 0 ? (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full w-fit">
+                          {category.transaction_count} {category.transaction_count === 1 ? 'transacción' : 'transacciones'}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          No hay transacciones asociadas a esta categoría
+                        </span>
+                      )
+                    )}
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
                     className="ml-4"
-                    onClick={() => router.push(`/transactions?category=${category.id}`)}
+                    onClick={() => router.push(`/transactions?category=${encodeURIComponent(category.name)}`)}
                   >
                     Ver transacciones
                   </Button>
