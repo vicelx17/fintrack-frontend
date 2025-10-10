@@ -165,7 +165,7 @@ export function useFinancialSummary(){
     return { data, isLoading, error, reload: load };
 }
 
-export function useMonthlyData(months: number = 6){
+export function useMonthlyData(months: number = 12){
     const [data, setData] = useState<MonthlyData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -200,7 +200,7 @@ export function useMonthlyData(months: number = 6){
     return { data, isLoading, error, reload: load };
 }
 
-export function useCategoryData(){
+export function useCategoryData(month?: number, year?: number){
     const [data, setData] = useState<CategoryData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -208,7 +208,7 @@ export function useCategoryData(){
     const load = async () => {
         setIsLoading(true);
         try {
-            const result = await dashboardApi.getCategoryData();
+            const result = await dashboardApi.getCategoryData(month, year);
             setData(result);
             setError(null);
         } catch (error) {
@@ -230,7 +230,7 @@ export function useCategoryData(){
             unsubscribeUpdated();
             unsubscribeDeleted();
         };
-    }, []);
+    }, [month, year]);
 
     return { data, isLoading, error, reload: load };
 }

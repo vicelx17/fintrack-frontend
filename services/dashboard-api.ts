@@ -21,7 +21,8 @@ export interface MonthlyData {
 
 export interface CategoryData {
     category: string;
-    amount: number;
+    expenses: number;
+    incomes: number;
 }
 
 export interface RecentTransaction {
@@ -90,14 +91,21 @@ export const dashboardApi = {
         return result.data;
     },
 
-    async getCategoryData(): Promise<CategoryData[]> {
-        const response = await fetch(`${API_BASE_URL}/metrics/category-data`, {
-            method: 'GET',
-            headers: getAuthHeaders(),
-        });
-        const result = await handleResponse<ApiResponse<CategoryData[]>>(response);
-        return result.data;
-    },
+    async getCategoryData(month?: number, year?: number): Promise<CategoryData[]> {
+    const params = new URLSearchParams();
+    if (month !== undefined) params.append('month', month.toString());
+    if (year !== undefined) params.append('year', year.toString());
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/metrics/category-data${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    const result = await handleResponse<ApiResponse<CategoryData[]>>(response);
+    return result.data;
+},
 
     // Obtener transacciones recientes
     async getRecentTransactions(limit: number = 10): Promise<RecentTransaction[]> {
