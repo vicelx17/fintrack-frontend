@@ -112,7 +112,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onClose, on
 
       const amount = parseFloat(formData.amount)
       
-      // Validar según el tipo
       if (formData.type === "expense" && amount >= 0) {
         toast({
           title: "Error",

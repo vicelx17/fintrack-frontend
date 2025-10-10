@@ -1,3 +1,5 @@
+import { budgetEvents } from '@/lib/budget-events';
+import { transactionEvents } from '@/lib/transaction-events';
 import { BudgetOverview, CategoryData, dashboardApi, FinancialSummary, MonthlyData, RecentTransaction } from '@/services/dashboard-api';
 import { useEffect, useState } from 'react';
 
@@ -127,10 +129,6 @@ export function useDashboard(){
         allErrors: Object.values(loadingStates).map(state => state.error).filter(error => error !== null),
     };
 }
-
-import { transactionEvents } from '@/lib/transaction-events'; // Añade este import
-
-// Dentro de cada hook personalizado, añade la suscripción:
 
 export function useFinancialSummary(){
     const [data, setData] = useState<FinancialSummary | null>(null);
@@ -292,6 +290,17 @@ export function useBudgetOverview(){
 
     useEffect(() => {
         load();
+        const unsubscribeBudgetCreated = budgetEvents.subscribe('budget-created', load);
+        const unsubscribTransctionCreated = transactionEvents.subscribe('transaction-created', load);
+        const unsubscribeUpdated = transactionEvents.subscribe('transaction-updated', load);
+        const unsubscribeDeleted = transactionEvents.subscribe('transaction-deleted', load);
+
+        return () => {
+            unsubscribeBudgetCreated();
+            unsubscribTransctionCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
     }, []);
 
     return { data, isLoading, error, reload: load };
