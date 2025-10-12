@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { transactionEvents } from "@/lib/transaction-events"
 import { transactionsApi } from "@/services/transactions-api"
 import { BriefcaseBusiness, BusFront, ChefHat, Coffee, Edit, MoreHorizontal, PlaneTakeoff, ReceiptEuro, ShoppingCart, Trash2, Wallet } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { TransactionDialog } from "../transactions/transaction-dialog"
 
@@ -22,6 +23,7 @@ const categoryIcons: { [key: string]: any } = {
   "Otros": ShoppingCart
 }
 
+
 const getCategoryIcon = (category: string) => {
   return categoryIcons[category] || ReceiptEuro
 }
@@ -33,6 +35,7 @@ export function RecentTransactions() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
   const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction)
@@ -83,7 +86,7 @@ export function RecentTransactions() {
             <CardTitle>Transacciones Recientes</CardTitle>
             <CardDescription>Últimos movimientos en tus cuentas</CardDescription>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => router.push("/transactions")}>
             Ver todas
           </Button>
         </CardHeader>
