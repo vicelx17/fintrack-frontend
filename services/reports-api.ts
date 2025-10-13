@@ -1,4 +1,3 @@
-// Reports and analytics utilities and API integration
 export interface ReportFilters {
   dateRange: "week" | "month" | "quarter" | "year" | "custom"
   startDate?: string
@@ -58,15 +57,19 @@ const getAuthHeaders = () => {
 export const reportsApi = {
   async generateReport(filters: ReportFilters): Promise<ReportData | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/reports/custom?${new URLSearchParams({
-        start_date: filters.startDate || '',
-        end_date: filters.endDate || ''
-      })}`, {
+      const params = new URLSearchParams()
+      
+      if (filters.startDate) params.append('start_date', filters.startDate)
+      if (filters.endDate) params.append('end_date', filters.endDate)
+
+      const response = await fetch(`${API_BASE_URL}/reports/custom?${params}`, {
         headers: getAuthHeaders(),
       })
 
       if (response.ok) {
         const data = await response.json()
+        
+        // Transform backend response to frontend format
         return {
           summary: {
             totalIncome: data.total_income,
@@ -80,7 +83,13 @@ export const reportsApi = {
           expenseAnalysis: [],
           incomeAnalysis: [],
           trends: [],
-          categoryBreakdown: data.top_categories,
+          categoryBreakdown: data.top_categories.map((cat: any) => ({
+            category: cat.category,
+            amount: Math.abs(cat.net_category_balance),
+            percentage: 0,
+            trend: "up" as const,
+            change: 0
+          })),
           generatedAt: new Date().toISOString()
         }
       }
@@ -156,31 +165,14 @@ export const reportsApi = {
 
   async exportReport(filters: ReportFilters, format: "pdf" | "csv" | "json"): Promise<Blob | null> {
     try {
-      let endpoint = ''
-      
-      if (format === 'pdf') {
-        if (filters.dateRange === 'week') {
-          endpoint = '/reports/generate/weekly_pdf'
-        } else if (filters.dateRange === 'month') {
-          endpoint = '/reports/generate/monthly_pdf'
-        } else {
-          endpoint = `/reports/generate/custom_pdf?start_date=${filters.startDate}&end_date=${filters.endDate}`
-        }
-      } else if (format === 'json') {
-        if (filters.dateRange === 'week') {
-          endpoint = '/reports/generate/weekly_json'
-        } else if (filters.dateRange === 'month') {
-          endpoint = '/reports/generate/monthly_json'
-        } else {
-          endpoint = `/reports/generate/custom_json?start_date=${filters.startDate}&end_date=${filters.endDate}`
-        }
-      }
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/reports/export`, {
+        method: "POST",
         headers: getAuthHeaders(),
+        body: JSON.stringify({ ...filters, format }),
       })
-
+      console.log("Body:", response.body)
       if (response.ok) {
+        console.log("Response data:", response.json)
         return await response.blob()
       }
     } catch (error) {
