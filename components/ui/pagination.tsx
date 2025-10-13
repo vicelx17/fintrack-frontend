@@ -1,7 +1,7 @@
 import {
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    MoreHorizontalIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MoreHorizontalIcon,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -117,7 +117,7 @@ function PaginationEllipsis({
 }
 
 export {
-    Pagination,
-    PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious
+  Pagination,
+  PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious
 }
 
