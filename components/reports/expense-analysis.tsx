@@ -2,25 +2,60 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CategoryAnalysis } from "@/services/reports-api"
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts"
 
-const expenseData = [
-  { category: "Alimentación", amount: 2550, color: "#2D5A3D", percentage: 29.8 },
-  { category: "Vivienda", amount: 2400, color: "#4A7F5C", percentage: 28.1 },
-  { category: "Transporte", amount: 1260, color: "#6B9B7A", percentage: 14.7 },
-  { category: "Entretenimiento", amount: 960, color: "#8CB798", percentage: 11.2 },
-  { category: "Servicios", amount: 840, color: "#AED3B6", percentage: 9.8 },
-  { category: "Otros", amount: 540, color: "#D0EFD4", percentage: 6.3 },
-]
+interface ExpenseAnalysisProps {
+  data: CategoryAnalysis[]
+  isLoading?: boolean
+}
 
-export function ExpenseAnalysis() {
+const COLORS = ["#2D5A3D", "#4A7F5C", "#6B9B7A", "#8CB798", "#AED3B6", "#D0EFD4"]
+
+export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Análisis de Gastos</CardTitle>
+          <CardDescription>Cargando datos...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Análisis de Gastos</CardTitle>
+          <CardDescription>No hay datos de gastos disponibles</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Sin datos para mostrar
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const expenseData = data.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length],
+  }))
+
   const totalExpenses = expenseData.reduce((sum, item) => sum + item.amount, 0)
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Análisis de Gastos</CardTitle>
-        <CardDescription>Distribución por categorías - Últimos 3 meses</CardDescription>
+        <CardDescription>Distribución por categorías</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -57,7 +92,7 @@ export function ExpenseAnalysis() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm font-medium">
               <span>Total de Gastos</span>
-              <span>€{totalExpenses.toLocaleString()}</span>
+              <span>€{totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
             </div>
             {expenseData.map((item, index) => (
               <div key={index} className="flex items-center justify-between text-sm">
@@ -66,8 +101,8 @@ export function ExpenseAnalysis() {
                   <span>{item.category}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-muted-foreground">{item.percentage}%</span>
-                  <span className="font-medium">€{item.amount.toLocaleString()}</span>
+                  <span className="text-muted-foreground">{item.percentage.toFixed(1)}%</span>
+                  <span className="font-medium">€{item.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             ))}

@@ -1,53 +1,94 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, CreditCard } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { FinancialSummary } from "@/services/reports-api"
+import { CreditCard, DollarSign, PiggyBank, Target, TrendingDown, TrendingUp } from "lucide-react"
 
-export function FinancialOverview() {
+interface FinancialOverviewProps {
+  summary: FinancialSummary | null
+  isLoading?: boolean
+}
+
+export function FinancialOverview({ summary, isLoading }: FinancialOverviewProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-24 mb-2" />
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (!summary) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">No hay datos disponibles</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const overviewData = [
     {
       title: "Ingresos Totales",
-      value: "€12,600.00",
+      value: `€${summary.totalIncome.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "+8.2%",
-      trend: "up",
+      trend: "up" as const,
       icon: TrendingUp,
-      period: "Últimos 3 meses",
+      period: summary.period,
     },
     {
       title: "Gastos Totales",
-      value: "€8,550.90",
+      value: `€${summary.totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "-3.1%",
-      trend: "down",
+      trend: "down" as const,
       icon: TrendingDown,
-      period: "Últimos 3 meses",
+      period: summary.period,
     },
     {
       title: "Balance Neto",
-      value: "€4,049.10",
+      value: `€${summary.netBalance.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "+15.3%",
-      trend: "up",
+      trend: summary.netBalance >= 0 ? "up" as const : "down" as const,
       icon: DollarSign,
-      period: "Últimos 3 meses",
+      period: summary.period,
     },
     {
       title: "Tasa de Ahorro",
-      value: "32.1%",
+      value: `${summary.savingsRate.toFixed(1)}%`,
       change: "+2.8%",
-      trend: "up",
+      trend: "up" as const,
       icon: PiggyBank,
       period: "Promedio mensual",
     },
     {
       title: "Gasto Promedio Diario",
-      value: "€95.01",
+      value: `€${summary.averageDailySpending.toFixed(2)}`,
       change: "-1.2%",
-      trend: "down",
+      trend: "down" as const,
       icon: CreditCard,
-      period: "Últimos 90 días",
+      period: summary.period,
     },
     {
       title: "Cumplimiento Presupuesto",
-      value: "87.5%",
+      value: `${summary.budgetCompliance.toFixed(1)}%`,
       change: "+5.1%",
-      trend: "up",
+      trend: "up" as const,
       icon: Target,
       period: "Este mes",
     },

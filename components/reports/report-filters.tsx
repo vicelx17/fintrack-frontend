@@ -1,29 +1,56 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Filter, RotateCcw } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ReportFilters as ReportFiltersType } from "@/services/reports-api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { CalendarIcon, Filter, RotateCcw } from "lucide-react"
+import { useState } from "react"
 
-export function ReportFilters() {
-  const [dateRange, setDateRange] = useState("month")
+interface ReportFiltersProps {
+  onFiltersApply: (filters: ReportFiltersType) => void
+  currentFilters: ReportFiltersType
+}
+
+export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersProps) {
+  const [dateRange, setDateRange] = useState(currentFilters.dateRange)
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [reportType, setReportType] = useState("comprehensive")
-  const [categories, setCategories] = useState("all")
+  const [reportType, setReportType] = useState<"comprehensive" | "expenses" | "income" | "budgets" | "trends">(currentFilters.reportType)
+  const [categories, setCategories] = useState<string[]>(currentFilters.categories || [])
 
   const resetFilters = () => {
     setDateRange("month")
     setStartDate(undefined)
     setEndDate(undefined)
     setReportType("comprehensive")
-    setCategories("all")
+    setCategories([])
+    
+    onFiltersApply({
+      dateRange: "month",
+      reportType: "comprehensive",
+      categories: []
+    })
+  }
+
+  const applyFilters = () => {
+    const filters: ReportFiltersType = {
+      dateRange,
+      reportType,
+      categories: categories.length > 0 ? categories : undefined,
+    }
+
+    if (dateRange === "custom" && startDate && endDate) {
+      filters.startDate = format(startDate, "yyyy-MM-dd")
+      filters.endDate = format(endDate, "yyyy-MM-dd")
+    }
+
+    onFiltersApply(filters)
   }
 
   return (
@@ -32,7 +59,7 @@ export function ReportFilters() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="space-y-2">
             <Label>Período</Label>
-            <Select value={dateRange} onValueChange={setDateRange}>
+            <Select value={dateRange} onValueChange={(value) => setDateRange(value as "week" | "month" | "quarter" | "year" | "custom")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -82,7 +109,10 @@ export function ReportFilters() {
 
           <div className="space-y-2">
             <Label>Tipo de Reporte</Label>
-            <Select value={reportType} onValueChange={setReportType}>
+            <Select
+              value={reportType}
+              onValueChange={(value: "comprehensive" | "expenses" | "income" | "budgets" | "trends") => setReportType(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -96,25 +126,8 @@ export function ReportFilters() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Categorías</Label>
-            <Select value={categories} onValueChange={setCategories}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="food">Alimentación</SelectItem>
-                <SelectItem value="transport">Transporte</SelectItem>
-                <SelectItem value="entertainment">Entretenimiento</SelectItem>
-                <SelectItem value="services">Servicios</SelectItem>
-                <SelectItem value="shopping">Compras</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex space-x-2">
-            <Button className="flex-1">
+            <Button className="flex-1" onClick={applyFilters}>
               <Filter className="w-4 h-4 mr-2" />
               Aplicar
             </Button>
