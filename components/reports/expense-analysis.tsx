@@ -45,12 +45,12 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
   }
 
   const expenseData = data.map((item, index) => ({
-    ...item,
+    name: item.category,  // Cambiar de ...item a usar name
+    value: item.amount,   // Cambiar dataKey
     color: COLORS[index % COLORS.length],
-    category: item.category || "Sin Categoría",
   }))
 
-  const totalExpenses = expenseData.reduce((sum, item) => sum + item.amount, 0)
+  const totalExpenses = expenseData.reduce((sum, item) => sum + item.value, 0)
 
   return (
     <Card>
@@ -62,9 +62,9 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
         <div className="space-y-6">
           <ChartContainer
             config={{
-              amount: { 
+              value: {
                 label: "Cantidad",
-                color: "#5a2d2dff",
+                color: "#2D5A3D",
               },
             }}
             className="h-[300px]"
@@ -78,7 +78,8 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
                   innerRadius={60}
                   outerRadius={120}
                   paddingAngle={2}
-                  dataKey="amount"
+                  dataKey="value"
+                  nameKey="name"
                 >
                   {expenseData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -95,18 +96,21 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
               <span>Total de Gastos</span>
               <span>€{totalExpenses.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
             </div>
-            {expenseData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span>{item.category}</span>
+            {expenseData.map((item, index) => {
+              const percentage = (item.value / totalExpenses * 100).toFixed(1)
+              return (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span>{item.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-muted-foreground">{percentage}%</span>
+                    <span className="font-medium">€{item.value.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-muted-foreground">{item.percentage.toFixed(1)}%</span>
-                  <span className="font-medium">€{item.amount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </CardContent>

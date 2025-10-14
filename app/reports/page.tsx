@@ -70,7 +70,7 @@ export default function ReportsPage() {
     }
   }
 
-  const handleExport = async (format: "pdf" | "csv" | "json") => {
+  const handleExport = async (format: "pdf" | "json") => {
     const success = await exportReport(filters, format)
     if (success) {
       toast({
