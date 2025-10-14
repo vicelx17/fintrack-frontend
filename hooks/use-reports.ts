@@ -110,16 +110,20 @@ export function useReports() {
                 const url = window.URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                a.download = `report-${new Date().toISOString().split('T')[0]}.${format}`
+                const dateStr = new Date().toISOString().split('T')[0]
+                a.download = `report-${filters.dateRange}-${dateStr}.${format}`
                 document.body.appendChild(a)
                 a.click()
                 window.URL.revokeObjectURL(url)
                 document.body.removeChild(a)
+                setLoading('export', false)
+                return true
             }
-            setLoading('export', false)
-            return true
+            setLoading('export', false, 'No se pudo generar el archivo')
+            return false
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Error exportando reporte'
+            console.error('Export error:', errorMessage)
             setLoading('export', false, errorMessage)
             return false
         }

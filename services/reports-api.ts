@@ -58,7 +58,7 @@ export const reportsApi = {
   async generateReport(filters: ReportFilters): Promise<ReportData | null> {
     try {
       const params = new URLSearchParams()
-      
+
       if (filters.startDate) params.append('start_date', filters.startDate)
       if (filters.endDate) params.append('end_date', filters.endDate)
 
@@ -68,7 +68,7 @@ export const reportsApi = {
 
       if (response.ok) {
         const data = await response.json()
-        
+
         // Transform backend response to frontend format
         return {
           summary: {
@@ -165,19 +165,39 @@ export const reportsApi = {
 
   async exportReport(filters: ReportFilters, format: "pdf" | "csv" | "json"): Promise<Blob | null> {
     try {
+      const body: any = {
+        dateRange: filters.dateRange,
+        format: format,
+        reportType: filters.reportType
+      }
+
+      if (filters.dateRange === "custom" && filters.startDate && filters.endDate) {
+        body.startDate = filters.startDate
+        body.endDate = filters.endDate
+      }
+
+      if (filters.categories && filters.categories.length > 0) {
+        body.categories = filters.categories
+      }
+      
+      console.log("Sending export request with body:", body)
+
       const response = await fetch(`${API_BASE_URL}/reports/export`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ ...filters, format }),
+        body: JSON.stringify(body),
       })
-      console.log("Body:", response.body)
+
       if (response.ok) {
-        console.log("Response data:", response.json)
         return await response.blob()
+      } else {
+        const errorText = await response.text()
+        console.error("Export error:", errorText)
+        throw new Error(`Error al exportar: ${response.status}`)
       }
     } catch (error) {
       console.error("Error exporting report:", error)
+      throw error
     }
-    return null
-  },
+  }
 }
