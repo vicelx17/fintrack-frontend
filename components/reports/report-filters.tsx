@@ -23,6 +23,7 @@ export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersP
   const [endDate, setEndDate] = useState<Date>()
   const [reportType, setReportType] = useState<"comprehensive" | "expenses" | "income" | "budgets" | "trends">(currentFilters.reportType)
   const [categories, setCategories] = useState<string[]>(currentFilters.categories || [])
+  const [transactionLimit, setTransactionLimit] = useState<number | undefined>(currentFilters.transactionLimit)
 
   const resetFilters = () => {
     setDateRange("month")
@@ -30,7 +31,8 @@ export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersP
     setEndDate(undefined)
     setReportType("comprehensive")
     setCategories([])
-    
+    setTransactionLimit(undefined)
+
     onFiltersApply({
       dateRange: "month",
       reportType: "comprehensive",
@@ -43,6 +45,7 @@ export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersP
       dateRange,
       reportType,
       categories: categories.length > 0 ? categories : undefined,
+      transactionLimit,
     }
 
     if (dateRange === "custom" && startDate && endDate) {
@@ -52,6 +55,7 @@ export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersP
 
     onFiltersApply(filters)
   }
+
 
   return (
     <Card>
@@ -122,6 +126,25 @@ export function ReportFilters({ onFiltersApply, currentFilters }: ReportFiltersP
                 <SelectItem value="income">Solo Ingresos</SelectItem>
                 <SelectItem value="budgets">Presupuestos</SelectItem>
                 <SelectItem value="trends">Tendencias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Límite de Transacciones</Label>
+            <Select
+              value={transactionLimit?.toString() || "all"}
+              onValueChange={(value) => setTransactionLimit(value === "all" ? undefined : parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
           </div>

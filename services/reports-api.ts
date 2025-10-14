@@ -4,7 +4,7 @@ export interface ReportFilters {
   endDate?: string
   reportType: "comprehensive" | "expenses" | "income" | "budgets" | "trends"
   categories?: string[]
-  accounts?: string[]
+  transactionLimit?: number
 }
 
 export interface FinancialSummary {
@@ -179,7 +179,7 @@ export const reportsApi = {
       if (filters.categories && filters.categories.length > 0) {
         body.categories = filters.categories
       }
-      
+
       console.log("Sending export request with body:", body)
 
       const response = await fetch(`${API_BASE_URL}/reports/export`, {

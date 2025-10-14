@@ -11,7 +11,7 @@ interface ExpenseAnalysisProps {
   isLoading?: boolean
 }
 
-const COLORS = ["#2D5A3D", "#4A7F5C", "#6B9B7A", "#8CB798", "#AED3B6", "#D0EFD4"]
+const COLORS = ["#7e3131ff", "#a04f4fff", "#c07272ff", "#d88c8cff", "#e9a2a2ff", "#ffbcbcff"]
 
 export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
   if (isLoading) {
@@ -47,6 +47,7 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
   const expenseData = data.map((item, index) => ({
     ...item,
     color: COLORS[index % COLORS.length],
+    category: item.category || "Sin Categoría",
   }))
 
   const totalExpenses = expenseData.reduce((sum, item) => sum + item.amount, 0)
@@ -61,9 +62,9 @@ export function ExpenseAnalysis({ data, isLoading }: ExpenseAnalysisProps) {
         <div className="space-y-6">
           <ChartContainer
             config={{
-              amount: {
+              amount: { 
                 label: "Cantidad",
-                color: "#2D5A3D",
+                color: "#5a2d2dff",
               },
             }}
             className="h-[300px]"
