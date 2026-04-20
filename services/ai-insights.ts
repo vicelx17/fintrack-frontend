@@ -71,7 +71,7 @@ export interface SpendingTrend {
 }
 
 // API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:800"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export class AIInsightsService {
   private static getAuthHeaders() {
