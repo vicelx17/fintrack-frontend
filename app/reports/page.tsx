@@ -51,40 +51,49 @@ export default function ReportsPage() {
     loadInitialData()
   }, [])
 
-  const handleFiltersApply = async (newFilters: ReportFiltersType) => {
-    setFilters(newFilters)
-    setCurrentPeriod(newFilters.dateRange)
-    
-    try {
-      await loadAllReportData(newFilters.dateRange)
-      toast({
-        title: "Filtros aplicados",
-        description: "Los datos se han actualizado correctamente",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudieron aplicar los filtros",
-        variant: "destructive",
-      })
-    }
+const handleFiltersApply = async (newFilters: ReportFiltersType) => {
+  setFilters(newFilters)
+  setCurrentPeriod(newFilters.dateRange)
+  
+  try {
+    await loadAllReportData(newFilters.dateRange)
+    toast({
+      title: "Filtros aplicados",
+      description: "Los datos se han actualizado correctamente",
+    })
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "No se pudieron aplicar los filtros",
+      variant: "destructive",
+    })
   }
+}
 
-  const handleExport = async (format: "pdf" | "json") => {
-    const success = await exportReport(filters, format)
-    if (success) {
-      toast({
-        title: "Reporte exportado",
-        description: `El reporte se ha descargado en formato ${format.toUpperCase()}`,
-      })
-    } else {
-      toast({
-        title: "Error",
-        description: "No se pudo exportar el reporte",
-        variant: "destructive",
-      })
-    }
+const handleExport = async (format: "pdf" | "json", exportFilters: ReportFiltersType) => {
+  const filtersForExport: ReportFiltersType = {
+    dateRange: exportFilters.dateRange,
+    reportType: exportFilters.reportType,
+    categories: exportFilters.categories,
+    transactionLimit: exportFilters.transactionLimit,
+    startDate: exportFilters.startDate,
+    endDate: exportFilters.endDate,
   }
+  
+  const success = await exportReport(filtersForExport, format)
+  if (success) {
+    toast({
+      title: "Reporte exportado",
+      description: `El reporte se ha descargado en formato ${format.toUpperCase()}`,
+    })
+  } else {
+    toast({
+      title: "Error",
+      description: "No se pudo exportar el reporte",
+      variant: "destructive",
+    })
+  }
+}
 
   // Mostrar loader solo en carga inicial
   if (isInitialLoad) {

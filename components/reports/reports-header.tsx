@@ -87,7 +87,7 @@ export function ReportsHeader({ onExport, isExporting }: ReportsHeaderProps) {
               <Button
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground"
-                onClick={() => router.push("/ai")}
+                onClick={() => router.push("/ai-insights")}
               >
                 IA Financiera
               </Button>
