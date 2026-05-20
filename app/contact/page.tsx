@@ -17,7 +17,7 @@ export default function ContactoPage() {
               <h1 className="text-2xl font-bold text-foreground">FinTrack</h1>
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/sugerencias" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/suggestions" className="text-muted-foreground hover:text-foreground transition-colors">
                 Sugerencias
               </Link>
               <Link href="/contacto" className="text-foreground font-medium">
