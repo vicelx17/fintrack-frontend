@@ -1,122 +1,130 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Target, Calendar, TrendingUp } from "lucide-react"
+"use client"
 
-const savingsGoals = [
-  {
-    id: "1",
-    title: "Fondo de Emergencia",
-    target: 10000,
-    current: 8750,
-    deadline: "2025-06-30",
-    aiPrediction: {
-      likelihood: 92,
-      projectedCompletion: "2025-05-15",
-      monthlyRequired: 208,
-    },
-  },
-  {
-    id: "2",
-    title: "Vacaciones de Verano",
-    target: 3000,
-    current: 1200,
-    deadline: "2025-07-01",
-    aiPrediction: {
-      likelihood: 78,
-      projectedCompletion: "2025-07-20",
-      monthlyRequired: 300,
-    },
-  },
-  {
-    id: "3",
-    title: "Nuevo Portátil",
-    target: 1500,
-    current: 450,
-    deadline: "2025-04-01",
-    aiPrediction: {
-      likelihood: 65,
-      projectedCompletion: "2025-05-10",
-      monthlyRequired: 350,
-    },
-  },
-]
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Target, Brain } from "lucide-react"
+import { useFinancialSummary } from "@/hooks/use-dashboard"
+import { useSpendingPredictions } from "@/hooks/use-ai"
 
 export function SavingsGoals() {
+  const { data: summary, isLoading: summaryLoading } = useFinancialSummary()
+  const { predictions, isLoading: predictionsLoading } = useSpendingPredictions("1month")
+
+  const isLoading = summaryLoading || predictionsLoading
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="w-5 h-5 text-primary" />
+            <span>Resumen de Ahorro IA</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-4 rounded-lg border space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-2 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const monthlyIncome = summary?.monthly_income ?? 0
+  const monthlyExpenses = summary?.monthly_expenses ?? 0
+  const currentSaving = summary?.saving ?? 0
+  const savingsRate = monthlyIncome > 0 ? (currentSaving / monthlyIncome) * 100 : 0
+
+  // Calculate predicted saving based on spending predictions
+  const predictedExpenseReduction = predictions.length > 0
+    ? predictions.reduce((sum, p) => {
+        const diff = p.current - p.predicted
+        return sum + diff
+      }, 0)
+    : 0
+
+  const projectedSaving = currentSaving + predictedExpenseReduction
+  const targetRate = 20 // 20% savings rate goal
+  const targetSaving = monthlyIncome * (targetRate / 100)
+  const savingsGap = targetSaving - currentSaving
+
+  const items = [
+    {
+      label: "Ahorro actual",
+      value: `€${currentSaving.toFixed(2)}/mes`,
+      detail: `${savingsRate.toFixed(1)}% de tus ingresos`,
+      status: savingsRate >= 20 ? "good" : savingsRate >= 10 ? "warning" : "bad",
+    },
+    {
+      label: "Ahorro proyectado IA",
+      value: projectedSaving > currentSaving
+        ? `€${projectedSaving.toFixed(2)}/mes`
+        : `€${currentSaving.toFixed(2)}/mes`,
+      detail: predictedExpenseReduction > 0
+        ? `+€${predictedExpenseReduction.toFixed(2)} optimizando gastos`
+        : "Sin cambios proyectados",
+      status: projectedSaving >= targetSaving ? "good" : "warning",
+    },
+    {
+      label: "Meta recomendada (20%)",
+      value: `€${targetSaving.toFixed(2)}/mes`,
+      detail: savingsGap > 0
+        ? `Faltan €${savingsGap.toFixed(2)} para alcanzarla`
+        : "¡Ya superas la meta!",
+      status: currentSaving >= targetSaving ? "good" : "neutral",
+    },
+  ]
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "good": return <Badge className="bg-primary/10 text-primary border-primary/20">Bien</Badge>
+      case "warning": return <Badge className="bg-secondary/10 text-secondary border-secondary/20">Mejorable</Badge>
+      case "bad": return <Badge variant="destructive">Bajo</Badge>
+      default: return <Badge variant="outline">Meta</Badge>
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Target className="w-5 h-5 text-primary" />
-          <span>Metas de Ahorro IA</span>
+          <span>Resumen de Ahorro IA</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {savingsGoals.map((goal) => {
-            const progress = (goal.current / goal.target) * 100
-            const remaining = goal.target - goal.current
-            const daysLeft = Math.ceil(
-              (new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-            )
-
-            const getLikelihoodColor = (likelihood: number) => {
-              if (likelihood >= 80) return "bg-primary text-primary-foreground"
-              if (likelihood >= 60) return "bg-secondary text-secondary-foreground"
-              return "bg-destructive text-destructive-foreground"
-            }
-
-            const getLikelihoodText = (likelihood: number) => {
-              if (likelihood >= 80) return "Muy Probable"
-              if (likelihood >= 60) return "Probable"
-              return "Difícil"
-            }
-
-            return (
-              <div key={goal.id} className="space-y-4 p-4 rounded-lg border bg-card/50">
+        {monthlyIncome === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            <Brain className="w-10 h-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">Registra transacciones de ingresos para ver tu análisis de ahorro</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {items.map((item, i) => (
+              <div key={i} className="p-4 rounded-lg border bg-card/50 space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{goal.title}</h3>
-                  <Badge className={getLikelihoodColor(goal.aiPrediction.likelihood)}>
-                    {getLikelihoodText(goal.aiPrediction.likelihood)}
-                  </Badge>
+                  <span className="text-sm font-medium">{item.label}</span>
+                  {getStatusBadge(item.status)}
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>€{goal.current.toLocaleString()}</span>
-                    <span>€{goal.target.toLocaleString()}</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{progress.toFixed(1)}% completado</span>
-                    <span>€{remaining.toLocaleString()} restante</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>Fecha límite:</span>
-                    </div>
-                    <span>{new Date(goal.deadline).toLocaleDateString("es-ES")}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <TrendingUp className="w-3 h-3" />
-                      <span>Predicción IA:</span>
-                    </div>
-                    <span>{new Date(goal.aiPrediction.projectedCompletion).toLocaleDateString("es-ES")}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Ahorro requerido:</span>
-                    <span className="font-medium">€{goal.aiPrediction.monthlyRequired}/mes</span>
-                  </div>
-                </div>
+                <div className="text-xl font-bold">{item.value}</div>
+                <p className="text-xs text-muted-foreground">{item.detail}</p>
               </div>
-            )
-          })}
-        </div>
+            ))}
+
+            {savingsGap > 0 && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs text-primary/80">
+                <span className="font-medium">Consejo IA: </span>
+                Reduciendo un 10% en tu categoría de mayor gasto podrías cerrar parte de esta brecha.
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
