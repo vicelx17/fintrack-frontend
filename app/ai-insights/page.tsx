@@ -1,35 +1,35 @@
 import { AIInsightsHeader } from "@/components/ai-insights/ai-insights-header"
+import { FinancialForecast } from "@/components/ai-insights/financial-forecast"
 import { PredictionOverview } from "@/components/ai-insights/prediction-overview"
-import { SpendingPredictions } from "@/components/ai-insights/spending-predictions"
+import { RiskAnalysis } from "@/components/ai-insights/risk-analysis"
 import { SavingsGoals } from "@/components/ai-insights/savings-goals"
 import { SmartRecommendations } from "@/components/ai-insights/smart-recommendations"
-import { FinancialForecast } from "@/components/ai-insights/financial-forecast"
-import { RiskAnalysis } from "@/components/ai-insights/risk-analysis"
+import { SpendingPredictions } from "@/components/ai-insights/spending-predictions"
+import { AuthProvider } from "@/components/auth/auth-provider"
 
 export default function AIInsightsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <AIInsightsHeader />
+    <AuthProvider protected>
+      <div className="min-h-screen bg-background">
+        <AIInsightsHeader />
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Prediction Overview */}
-        <PredictionOverview />
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          <PredictionOverview />
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <SpendingPredictions />
-            <FinancialForecast />
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <SpendingPredictions />
+              <FinancialForecast />
+            </div>
+
+            <div className="space-y-6">
+              <SmartRecommendations />
+              <SavingsGoals />
+              <RiskAnalysis />
+            </div>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <SmartRecommendations />
-            <SavingsGoals />
-            <RiskAnalysis />
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </AuthProvider>
   )
 }

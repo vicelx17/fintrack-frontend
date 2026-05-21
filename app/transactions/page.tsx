@@ -1,5 +1,6 @@
 "use client"
 
+import { AuthProvider } from "@/components/auth/auth-provider"
 import { CategoryBreakdown } from "@/components/transactions/transaction-category-breakdown"
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
 import { TransactionHeader } from "@/components/transactions/transaction-header"
@@ -16,28 +17,24 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <TransactionHeader />
-      
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Stats Section */}
-        <TransactionStats filters={filters} />
+    <AuthProvider protected>
+      <div className="min-h-screen bg-background">
+        <TransactionHeader />
 
-        {/* Filters Section */}
-        <TransactionFilters onFiltersChange={handleFiltersChange} />
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          <TransactionStats filters={filters} />
+          <TransactionFilters onFiltersChange={handleFiltersChange} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Transactions List */}
-          <div className="lg:col-span-2">
-            <TransactionList filters={filters} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <TransactionList filters={filters} />
+            </div>
+            <div className="lg:col-span-1">
+              <CategoryBreakdown filters={filters} />
+            </div>
           </div>
-
-          {/* Category Breakdown */}
-          <div className="lg:col-span-1">
-            <CategoryBreakdown filters={filters} />
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </AuthProvider>
   )
 }

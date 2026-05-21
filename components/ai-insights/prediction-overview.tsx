@@ -1,10 +1,10 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Target, AlertTriangle, CheckCircle, Clock, Brain } from "lucide-react"
-import { useSpendingTrends, useRiskAnalysis, useSmartRecommendations } from "@/hooks/use-ai"
+import { useRiskAnalysis, useSmartRecommendations, useSpendingTrends } from "@/hooks/use-ai"
+import { AlertTriangle, Brain, CheckCircle, Clock, Target, TrendingUp } from "lucide-react"
 
 export function PredictionOverview() {
   const {trend, isLoading: trendLoading } = useSpendingTrends()
@@ -76,14 +76,6 @@ export function PredictionOverview() {
       status: totalPotentialSavings > 0 ? "good" : "neutral" as any,
       icon: CheckCircle,
     },
-    {
-      title: "Acciones Pendientes",
-      current: "Recomendaciones IA",
-      predicted: `${actionableCount} accionables`,
-      confidence: recommendations.length > 0 ? 95 : 0,
-      status: actionableCount > 2 ? "warning" : "good" as any,
-      icon: AlertTriangle,
-    },
   ]
  
   const getStatusColor = (status: string) => {
@@ -105,7 +97,7 @@ export function PredictionOverview() {
   }
  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {predictions.map((prediction, index) => {
         const Icon = prediction.icon
         return (

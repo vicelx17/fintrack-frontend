@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-
+import { SessionMessage } from "@/components/auth/session-message"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AuthService } from "@/services/auth"
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react"
 import { useRouter } from "next/navigation"
+import type React from "react"
 import { useState } from "react"
 
 export function LoginForm() {
@@ -20,42 +20,36 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  
+
   // Registro
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
-  
+
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("") // Limpiar errores anteriores
+    setError("")
 
     const credentials = { username, password }
-    
+
     try {
-      
       const response = await AuthService.login(credentials)
 
       if (response.success && response.token) {
-        console.log("Login exitoso, redirigiendo...")
-        // Login exitoso - redirigir al dashboard
         setIsSuccessful(true)
-        setSuccess("Indentificado con éxito! Redirigiendo...")
+        setSuccess("Identificado con éxito! Redirigiendo...")
         const timer = setTimeout(() => {
           clearTimeout(timer)
           router.push("/dashboard")
         }, 1500)
       } else {
-        // Login falló
         const errorMessage = response.message || "Login failed"
         setError(errorMessage)
-        console.log("Login failed:", errorMessage)
       }
     } catch (error) {
-      console.error("An error occurred during login:", error)
       setError("Error inesperado durante el login")
     } finally {
       setIsLoading(false)
@@ -68,13 +62,12 @@ export function LoginForm() {
     setError("")
     setSuccess("")
 
-    const credentials = { firstName, lastName, email, username: username, password: password }
+    const credentials = { firstName, lastName, email, username, password }
 
     try {
       const response = await AuthService.register(credentials)
-      
+
       if (response.success && response.token) {
-        console.log("Registro exitoso, redirigiendo...")
         setIsSuccessful(true)
         setSuccess("Registrado con éxito! Redirigiendo...")
         const timer = setTimeout(() => {
@@ -84,10 +77,8 @@ export function LoginForm() {
       } else {
         const errorMessage = response.message || "Registro fallido"
         setError(errorMessage)
-        console.log("Registro fallido:", errorMessage)
       }
     } catch (error) {
-      console.error("Ocurrió un error durante el registro:", error)
       setError("Error inesperado durante el registro")
     } finally {
       setIsLoading(false)
@@ -101,6 +92,9 @@ export function LoginForm() {
         <CardDescription>Accede a tu cuenta o crea una nueva para comenzar</CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Mensaje de sesión expirada / inactividad */}
+        <SessionMessage />
+
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
@@ -109,14 +103,11 @@ export function LoginForm() {
 
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Mostrar mensajes de éxito */}
               {success && (
                 <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
                   {success}
                 </div>
               )}
-
-              {/* Mostrar errores si los hay */}
               {error && (
                 <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                   {error}
@@ -127,14 +118,14 @@ export function LoginForm() {
                 <Label htmlFor="username">Nombre de usuario</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="username" 
-                    type="text" 
-                    placeholder="username" 
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)} 
-                    className="pl-10" 
-                    required 
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-10"
+                    required
                   />
                 </div>
               </div>
@@ -192,14 +183,11 @@ export function LoginForm() {
 
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
-              {/* Mostrar mensajes de éxito */}
               {success && (
                 <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
                   {success}
                 </div>
               )}
-
-              {/* Mostrar errores si los hay */}
               {error && (
                 <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                   {error}
@@ -211,13 +199,13 @@ export function LoginForm() {
                   <Label htmlFor="firstName">Nombre</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="firstName" 
-                      placeholder="Nombre" 
-                      className="pl-10" 
+                    <Input
+                      id="firstName"
+                      placeholder="Nombre"
+                      className="pl-10"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      required 
+                      required
                     />
                   </div>
                 </div>
@@ -225,13 +213,13 @@ export function LoginForm() {
                   <Label htmlFor="lastName">Apellido</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="lastName" 
-                      placeholder="Apellido" 
-                      className="pl-10" 
+                    <Input
+                      id="lastName"
+                      placeholder="Apellido"
+                      className="pl-10"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      required 
+                      required
                     />
                   </div>
                 </div>
@@ -241,14 +229,14 @@ export function LoginForm() {
                 <Label htmlFor="registerEmail">Correo Electrónico</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="registerEmail" 
-                    type="email" 
-                    placeholder="tu@email.com" 
-                    className="pl-10" 
+                  <Input
+                    id="registerEmail"
+                    type="email"
+                    placeholder="tu@email.com"
+                    className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
               </div>
@@ -257,14 +245,14 @@ export function LoginForm() {
                 <Label htmlFor="registerUsername">Nombre de usuario</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="registerUsername" 
-                    type="text" 
-                    placeholder="usuario123" 
-                    className="pl-10" 
+                  <Input
+                    id="registerUsername"
+                    type="text"
+                    placeholder="usuario123"
+                    className="pl-10"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
               </div>
@@ -312,6 +300,7 @@ export function LoginForm() {
                   </Button>
                 </Label>
               </div>
+
               <Button type="submit" className="w-full" disabled={isLoading || isSucessful}>
                 {success ? "Redirigiendo..." : isLoading ? "Registrando..." : "Crear Cuenta"}
               </Button>

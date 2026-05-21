@@ -1,5 +1,6 @@
 "use client"
 
+import { AuthProvider } from "@/components/auth/auth-provider"
 import { AIInsights } from "@/components/dashboard/ai-insights"
 import { BudgetOverview } from "@/components/dashboard/budget-overview"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
@@ -10,31 +11,31 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
+    <AuthProvider protected>
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Financial Summary Cards */}
-        <FinancialSummary />
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          {/* Financial Summary Cards */}
+          <FinancialSummary />
 
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Charts and Analytics */}
-          <div className="lg:col-span-2 space-y-6">
-            <ExpenseChart />
-            <RecentTransactions />
-          </div>
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column - Charts and Analytics */}
+            <div className="lg:col-span-2 space-y-6">
+              <ExpenseChart />
+              <RecentTransactions />
+            </div>
 
-          {/* Right Column - Sidebar */}
+            {/* Right Column - Sidebar */}
             <div className="space-y-6">
               <QuickActions />
               <BudgetOverview />
               <AIInsights />
-
             </div>
-          
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </AuthProvider>
   )
 }

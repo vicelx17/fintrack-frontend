@@ -1,5 +1,6 @@
 "use client"
 
+import { AuthProvider } from "@/components/auth/auth-provider"
 import { CategoryBreakdown } from "@/components/reports/category-breakdown"
 import { ExpenseAnalysis } from "@/components/reports/expense-analysis"
 import { FinancialOverview } from "@/components/reports/financial-overview"
@@ -32,7 +33,6 @@ export default function ReportsPage() {
   })
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // Carga inicial
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -47,105 +47,82 @@ export default function ReportsPage() {
         setIsInitialLoad(false)
       }
     }
-
     loadInitialData()
   }, [])
 
-const handleFiltersApply = async (newFilters: ReportFiltersType) => {
-  setFilters(newFilters)
-  setCurrentPeriod(newFilters.dateRange)
-  
-  try {
-    await loadAllReportData(newFilters.dateRange)
-    toast({
-      title: "Filtros aplicados",
-      description: "Los datos se han actualizado correctamente",
-    })
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "No se pudieron aplicar los filtros",
-      variant: "destructive",
-    })
+  const handleFiltersApply = async (newFilters: ReportFiltersType) => {
+    setFilters(newFilters)
+    setCurrentPeriod(newFilters.dateRange)
+    try {
+      await loadAllReportData(newFilters.dateRange)
+      toast({ title: "Filtros aplicados", description: "Los datos se han actualizado correctamente" })
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudieron aplicar los filtros", variant: "destructive" })
+    }
   }
-}
 
-const handleExport = async (format: "pdf" | "json", exportFilters: ReportFiltersType) => {
-  const filtersForExport: ReportFiltersType = {
-    dateRange: exportFilters.dateRange,
-    reportType: exportFilters.reportType,
-    categories: exportFilters.categories,
-    transactionLimit: exportFilters.transactionLimit,
-    startDate: exportFilters.startDate,
-    endDate: exportFilters.endDate,
+  const handleExport = async (format: "pdf" | "json", exportFilters: ReportFiltersType) => {
+    const filtersForExport: ReportFiltersType = {
+      dateRange: exportFilters.dateRange,
+      reportType: exportFilters.reportType,
+      categories: exportFilters.categories,
+      transactionLimit: exportFilters.transactionLimit,
+      startDate: exportFilters.startDate,
+      endDate: exportFilters.endDate,
+    }
+    const success = await exportReport(filtersForExport, format)
+    if (success) {
+      toast({ title: "Reporte exportado", description: `El reporte se ha descargado en formato ${format.toUpperCase()}` })
+    } else {
+      toast({ title: "Error", description: "No se pudo exportar el reporte", variant: "destructive" })
+    }
   }
-  
-  const success = await exportReport(filtersForExport, format)
-  if (success) {
-    toast({
-      title: "Reporte exportado",
-      description: `El reporte se ha descargado en formato ${format.toUpperCase()}`,
-    })
-  } else {
-    toast({
-      title: "Error",
-      description: "No se pudo exportar el reporte",
-      variant: "destructive",
-    })
-  }
-}
 
-  // Mostrar loader solo en carga inicial
   if (isInitialLoad) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Cargando reportes...</p>
+      <AuthProvider protected>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Cargando reportes...</p>
+          </div>
         </div>
-      </div>
+      </AuthProvider>
     )
   }
 
   const isRefreshing = loading.summary.isLoading || loading.expenses.isLoading || loading.income.isLoading
 
   return (
-    <div className="min-h-screen bg-background">
-      <ReportsHeader onExport={handleExport} isExporting={loading.export.isLoading} />
+    <AuthProvider protected>
+      <div className="min-h-screen bg-background">
+        <ReportsHeader onExport={handleExport} isExporting={loading.export.isLoading} />
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Report Filters */}
-        <ReportFilters onFiltersApply={handleFiltersApply} currentFilters={filters} />
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          <ReportFilters onFiltersApply={handleFiltersApply} currentFilters={filters} />
 
-        {/* Loading indicator durante refresh */}
-        {isRefreshing && (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-            <span className="text-sm text-muted-foreground">Actualizando datos...</span>
-          </div>
-        )}
+          {isRefreshing && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+              <span className="text-sm text-muted-foreground">Actualizando datos...</span>
+            </div>
+          )}
 
-        {/* Financial Overview */}
-        <FinancialOverview summary={financialSummary} isLoading={loading.summary.isLoading} />
+          <FinancialOverview summary={financialSummary} isLoading={loading.summary.isLoading} />
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Expense Analysis */}
-          <ExpenseAnalysis data={expenseAnalysis} isLoading={loading.expenses.isLoading} />
-
-          {/* Income Analysis */}
-          <IncomeAnalysis data={incomeAnalysis} isLoading={loading.income.isLoading} />
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Trend Analysis */}
-          <div className="lg:col-span-2">
-            <TrendAnalysis data={trendData} period={currentPeriod} isLoading={loading.trends.isLoading} />
+          <div className="grid lg:grid-cols-2 gap-6">
+            <ExpenseAnalysis data={expenseAnalysis} isLoading={loading.expenses.isLoading} />
+            <IncomeAnalysis data={incomeAnalysis} isLoading={loading.income.isLoading} />
           </div>
 
-          {/* Category Breakdown */}
-          <CategoryBreakdown data={expenseAnalysis} isLoading={loading.expenses.isLoading} />
-        </div>
-      </main>
-    </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <TrendAnalysis data={trendData} period={currentPeriod} isLoading={loading.trends.isLoading} />
+            </div>
+            <CategoryBreakdown data={expenseAnalysis} isLoading={loading.expenses.isLoading} />
+          </div>
+        </main>
+      </div>
+    </AuthProvider>
   )
 }
