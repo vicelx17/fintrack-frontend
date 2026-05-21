@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Plus, Target } from "lucide-react"
 import { useState } from "react"
 import { BudgetDialog } from "../budgets/budget-dialog"
+import { ExportReportDialog } from "../reports/report-dialog"
 
 export function QuickActions() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false)
 
   const actions = [
     {
@@ -31,7 +33,7 @@ export function QuickActions() {
       description: "Exportar datos",
       icon: FileText,
       color: "bg-muted text-muted-foreground",
-      action: () => console.log("Generar reporte"),
+      action: () => setIsReportDialogOpen(true),
     },
   ]
 
@@ -74,10 +76,16 @@ export function QuickActions() {
         onOpenChange={setIsTransactionDialogOpen}
         onClose={() => setIsTransactionDialogOpen(false)}
       />
+
       <BudgetDialog
         open={isBudgetDialogOpen}
         onOpenChange={setIsBudgetDialogOpen}
         onClose={() => setIsBudgetDialogOpen(false)}
+      />
+
+      <ExportReportDialog
+        open={isReportDialogOpen}
+        onOpenChange={setIsReportDialogOpen}
       />
     </>
   )
