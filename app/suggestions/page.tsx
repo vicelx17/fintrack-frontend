@@ -86,7 +86,7 @@ export default function SugerenciasPage() {
               </div>
               <span className="font-semibold">FinTrack</span>
             </div>
-            <p className="text-sm text-muted-foreground">© 2025 FinTrack. Todos los derechos reservados.</p>
+            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} FinTrack. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
